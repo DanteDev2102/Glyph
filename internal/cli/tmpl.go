@@ -35,12 +35,12 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 // InitCmd initializes the CLI with the "init" command.
 func (cli *Base) InitCmd() {
 	initCmd := &cobra.Command{
-		Use:   "init [template]",
+		Use:   "tmpl [template name]",
 		Short: "example",
 		Long:  "example",
 	}
 
-	chargeTemplates(initCmd, cli.Conf.Commmands)
+	chargeTemplates(initCmd, &cli.Conf.Commmands)
 
 	cli.Root.AddCommand(initCmd)
 }

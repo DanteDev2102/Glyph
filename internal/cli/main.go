@@ -17,7 +17,17 @@ var Cli *Base
 // IBase defines the interface for initializing commands.
 type IBase interface {
 	InitCmd()
+	CreateCmd()
 }
+
+var (
+	repo        string
+	branch      string
+	tag         string
+	summary     string
+	name        string
+	description string
+)
 
 func init() {
 	conf := &parser.Parser{File: "/app/test.toml"}
@@ -39,5 +49,14 @@ func init() {
 		},
 	}
 
+	Cli.Root.PersistentFlags().StringVarP(&name, "name", "n", "", "--name or -n [name template]")
+	Cli.Root.PersistentFlags().StringVarP(&repo, "repo", "r", "", "--repo or -r [repository url]")
+	Cli.Root.PersistentFlags().StringVarP(&branch, "branch", "b", "", "--branch or -b [branch]")
+	Cli.Root.PersistentFlags().StringVarP(&tag, "tag", "t", "", "--tag or -t [tag]")
+	Cli.Root.PersistentFlags().StringVarP(&summary, "summary", "s", "", "--summary or -s [summary]")
+	Cli.Root.PersistentFlags().StringVarP(&description, "description", "d", "", "--description or -d [description]")
+
+	Cli.CreateCmd()
 	Cli.InitCmd()
+
 }
