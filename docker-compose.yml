@@ -1,0 +1,8 @@
+services:
+  app:
+    command: air -c .air.toml
+    container_name: ${APP_NAME}
+    build:
+      context: .
+    volumes:
+      - ./:/app

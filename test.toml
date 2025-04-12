@@ -1,0 +1,27 @@
+[tes]
+path = "/"
+cmd = ""
+repo = "https://github.com/DanteDev2102/uwe.git"
+short = ""
+long = ""
+
+[tesu]
+path = "/hola"
+cmd = "curl"
+repo = ""
+short = ""
+long = ""
+
+[tesi]
+path = "/hola"
+cmd = "curl"
+repo = ""
+short = ""
+long = ""
+
+[te]
+path = "/hola"
+cmd = "curl"
+repo = ""
+short = ""
+long = ""
