@@ -14,6 +14,11 @@ type Base struct {
 // Cli is an instance of Base that holds the configuration parser and root command.
 var Cli *Base
 
+// IBase defines the interface for initializing commands.
+type IBase interface {
+	InitCmd()
+}
+
 func init() {
 	conf := &parser.Parser{File: "/app/test.toml"}
 
@@ -28,8 +33,11 @@ func init() {
 			Use:   "glyph",
 			Short: "example",
 			Long:  "example",
+			CompletionOptions: cli.CompletionOptions{
+				HiddenDefaultCmd: true,
+			},
 		},
 	}
 
-	Cli.ChargeTemplates()
+	Cli.InitCmd()
 }

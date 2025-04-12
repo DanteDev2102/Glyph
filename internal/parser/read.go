@@ -66,15 +66,13 @@ func (p *Parser) ExtractCommands() error {
 
 		commands = append(commands, Command{
 			Key:   key,
-			Path:  extractValue(&valueMap, "path", ""),
-			Cmd:   extractValue(&valueMap, "cmd", ""),
 			Repo:  extractValue(&valueMap, "repo", ""),
 			Long:  extractValue(&valueMap, "long", ""),
 			Short: extractValue(&valueMap, "short", ""),
 		})
 	}
 
-	p.Commmands = commands
+	p.Commmands = &commands
 
 	return nil
 }
