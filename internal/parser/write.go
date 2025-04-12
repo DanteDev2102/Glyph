@@ -39,12 +39,12 @@ func (p *Parser) Write(tmpl *Template) {
 
 	if len(tmpl.Summary) > 0 {
 		builder.WriteString("\n")
-		builder.WriteString(fmt.Sprintf("summary = \"%s\"", tmpl.Summary))
+		builder.WriteString(fmt.Sprintf("short = \"%s\"", tmpl.Summary))
 	}
 
 	if len(tmpl.Description) > 0 {
 		builder.WriteString("\n")
-		builder.WriteString(fmt.Sprintf("description = \"%s\"", tmpl.Branch))
+		builder.WriteString(fmt.Sprintf("long = \"%s\"", tmpl.Branch))
 	}
 
 	err := os.WriteFile(p.File, []byte(builder.String()), 0644)
@@ -55,3 +55,5 @@ func (p *Parser) Write(tmpl *Template) {
 
 	p.Refresh()
 }
+
+func (p *Parser) WriteSection(tmpl *Template) {}

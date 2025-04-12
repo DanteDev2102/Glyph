@@ -11,6 +11,7 @@ func (cli *Base) CreateCmd() {
 		Short: "example",
 		Long:  "example",
 		Run: func(cmd *cobra.Command, args []string) {
+
 			flags := parser.Template{
 				Name:        name,
 				Summary:     summary,
