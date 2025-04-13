@@ -61,5 +61,6 @@ func init() {
 	Cli.CreateCmd()
 	Cli.InitCmd()
 	Cli.UpdateCmd()
+	Cli.DeleteCmd()
 
 }

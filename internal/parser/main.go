@@ -22,4 +22,5 @@ type IParser interface {
 	Create()
 	ExtractCommands()
 	Refresh()
+	DeleteSection()
 }

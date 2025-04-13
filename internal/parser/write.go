@@ -66,7 +66,7 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 		return
 	}
 
-	value, ok := config[name]
+	_, ok := config[name]
 	if !ok {
 		fmt.Println("Not Exist this command")
 		return
@@ -110,9 +110,4 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Println(config)
-	fmt.Println(value)
-	fmt.Println(newValues)
-	fmt.Println(tmpl)
 }
