@@ -10,10 +10,12 @@ type Parser struct {
 
 // Command represents a parsed command with its associated metadata.
 type Command struct {
-	Repo  string
-	Key   string
-	Short string
-	Long  string
+	Repo   string
+	Key    string
+	Short  string
+	Long   string
+	Branch string
+	Tag    string
 }
 
 // IParser defines the interface for parsing operations.

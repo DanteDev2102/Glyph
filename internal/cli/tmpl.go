@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/DanteDev2102/Glyph/internal/parser"
@@ -18,15 +19,50 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 			Short: command.Short,
 			Long:  command.Long,
 			Run: func(_ *cobra.Command, args []string) {
-				execute := exec.Command("git", "clone", strings.TrimSpace(command.Repo))
-				if len(args) > 0 {
-					execute = exec.Command("git", "clone", command.Repo, args[0])
+				if len(args) == 0 {
+					fmt.Println("Directory path is required")
+					return
 				}
+
+				if len(strings.TrimSpace(args[0])) <= 3 {
+					fmt.Println("Not valid path")
+					return
+				}
+
+				arg := []string{"clone", "--depth=1", command.Repo, args[0]}
+
+				detail := command.Tag
+
+				if len(detail) == 0 {
+					detail = command.Branch
+				}
+
+				if len(detail) == 0 {
+					detail = branch
+				}
+
+				if len(detail) == 0 {
+					detail = tag
+				}
+
+				if len(detail) > 0 {
+					arg = append(arg, "-b", detail, "--single-branch")
+				}
+
+				execute := exec.Command("git", arg...)
 
 				err := execute.Run()
 				if err != nil {
+					return
+				}
+
+				gitDir := filepath.Join(args[0], ".git")
+				execute = exec.Command("rm", "-rf", gitDir)
+				err = execute.Run()
+				if err != nil {
 					fmt.Println(err)
 				}
+
 			},
 		})
 	}

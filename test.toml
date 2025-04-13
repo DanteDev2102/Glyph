@@ -1,15 +1,2 @@
-[jejeje]
-branch = 'jelo'
-description = 'jelo'
-repo = ''
-summary = 'kekekeke'
-tag = 'uiui'
-
-[jelou]
-repo = 'kiki'
-
-[lol]
-repo = 'yujuuuu'
-
-[tes]
-repo = 'yujuuuu'
+[test]
+repo = "https://github.com/DanteDev2102/Glyph.git"

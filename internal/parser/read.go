@@ -65,10 +65,12 @@ func (p *Parser) ExtractCommands() error {
 		}
 
 		commands = append(commands, Command{
-			Key:   key,
-			Repo:  extractValue(&valueMap, "repo", ""),
-			Long:  extractValue(&valueMap, "long", ""),
-			Short: extractValue(&valueMap, "short", ""),
+			Key:    key,
+			Repo:   extractValue(&valueMap, "repo", ""),
+			Long:   extractValue(&valueMap, "description", ""),
+			Short:  extractValue(&valueMap, "summary", ""),
+			Branch: extractValue(&valueMap, "branch", ""),
+			Tag:    extractValue(&valueMap, "tag", ""),
 		})
 	}
 
