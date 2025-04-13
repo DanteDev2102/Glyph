@@ -1,36 +1,28 @@
-[tes]
-repo = "https://github.com/DanteDev2102/uwe.git"
-short = ""
-long = ""
+[jejeje]
+branch = 'jelo'
+description = 'jelo'
+repo = ''
+summary = 'kekekeke'
+tag = 'uiui'
 
-[tesu]
-repo = ""
-short = ""
-long = ""
+[jelou]
+repo = 'kiki'
+
+[lol]
+repo = 'yujuuuu'
+
+[tes]
+repo = 'yujuuuu'
 
 [tesi]
-repo = ""
-short = ""
-long = ""
+long = ''
+repo = ''
+short = ''
 
-[te]
-repo = ""
-short = ""
-long = ""
+[testify]
+repo = 'yujuuuu'
 
-[jejeje]
-repo = ""
-branch = "jelo"
-tag = "uiui"
-summary = "kekekeke"
-description = "jelo"
-
-[jeje]
-repo = ""
-branch = "jelo"
-tag = "uiui"
-summary = "kekekeke"
-description = "jelo"
-
-[jej]
-repo = ""
+[tesu]
+long = ''
+repo = ''
+short = ''

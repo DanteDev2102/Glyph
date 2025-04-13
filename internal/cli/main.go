@@ -18,6 +18,8 @@ var Cli *Base
 type IBase interface {
 	InitCmd()
 	CreateCmd()
+	UpdateCmd()
+	DeleteCmd()
 }
 
 var (
@@ -58,5 +60,6 @@ func init() {
 
 	Cli.CreateCmd()
 	Cli.InitCmd()
+	Cli.UpdateCmd()
 
 }

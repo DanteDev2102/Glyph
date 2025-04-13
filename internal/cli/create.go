@@ -5,13 +5,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// CreateCmd adds the "create" command to the CLI root command.
 func (cli *Base) CreateCmd() {
 	cli.Root.AddCommand(&cobra.Command{
 		Use:   "create --repo [repository url] --name [template name] --short [short description your command] --long [long description your command]",
 		Short: "example",
 		Long:  "example",
 		Run: func(cmd *cobra.Command, args []string) {
-
 			flags := parser.Template{
 				Name:        name,
 				Summary:     summary,
