@@ -1,24 +1,28 @@
 package parser
 
+// Parser is a struct that holds the file information and parsed commands.
 type Parser struct {
 	File        string
 	Commmands   []Command
-	content     []byte
-	contentRead bool
+	Content     []byte
+	ContentRead bool
 }
 
+// Command represents a parsed command with its associated metadata.
 type Command struct {
-	Path  string
-	Cmd   string
-	Repo  string
-	Key   string
-	Short string
-	Long  string
+	Repo   string
+	Key    string
+	Short  string
+	Long   string
+	Branch string
+	Tag    string
 }
 
+// IParser defines the interface for parsing operations.
 type IParser interface {
 	Read() (map[string]interface{}, error)
-	Create() string
-	ExtractCommands() error
+	Create()
+	ExtractCommands()
 	Refresh()
+	DeleteSection()
 }

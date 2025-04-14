@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"os"
+
 	parser "github.com/DanteDev2102/Glyph/internal/parser"
 	cli "github.com/spf13/cobra"
 )
@@ -14,12 +16,30 @@ type Base struct {
 // Cli is an instance of Base that holds the configuration parser and root command.
 var Cli *Base
 
-func init() {
-	conf := &parser.Parser{File: "/app/test.toml"}
+// IBase defines the interface for initializing commands.
+type IBase interface {
+	InitCmd()
+	CreateCmd()
+	UpdateCmd()
+	DeleteCmd()
+}
 
-	err := conf.ExtractCommands()
+var (
+	repo        string
+	branch      string
+	tag         string
+	summary     string
+	name        string
+	description string
+)
+
+func init() {
+	home, err := os.UserHomeDir()
+	conf := &parser.Parser{File: home + "/.config/Glyph/repositories.toml"}
+
+	err = conf.ExtractCommands()
 	if err != nil {
-		panic("END")
+		panic(err)
 	}
 
 	Cli = &Base{
@@ -28,8 +48,22 @@ func init() {
 			Use:   "glyph",
 			Short: "example",
 			Long:  "example",
+			CompletionOptions: cli.CompletionOptions{
+				HiddenDefaultCmd: true,
+			},
 		},
 	}
 
-	Cli.ChargeTemplates()
+	Cli.Root.PersistentFlags().StringVarP(&name, "name", "n", "", "--name or -n [name template]")
+	Cli.Root.PersistentFlags().StringVarP(&repo, "repo", "r", "", "--repo or -r [repository url]")
+	Cli.Root.PersistentFlags().StringVarP(&branch, "branch", "b", "", "--branch or -b [branch]")
+	Cli.Root.PersistentFlags().StringVarP(&tag, "tag", "t", "", "--tag or -t [tag]")
+	Cli.Root.PersistentFlags().StringVarP(&summary, "summary", "s", "", "--summary or -s [summary]")
+	Cli.Root.PersistentFlags().StringVarP(&description, "description", "d", "", "--description or -d [description]")
+
+	Cli.CreateCmd()
+	Cli.InitCmd()
+	Cli.UpdateCmd()
+	Cli.DeleteCmd()
+
 }

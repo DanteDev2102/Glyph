@@ -24,17 +24,17 @@ func extractValue(data *map[string]any, key, defaultValue string) string {
 func (p *Parser) Read() (map[string]interface{}, error) {
 	var config map[string]interface{}
 
-	if !p.contentRead {
+	if !p.ContentRead {
 		templates, err := os.ReadFile(p.File)
 		if err != nil {
 			return config, err
 		}
 
-		p.contentRead = true
-		p.content = templates
+		p.ContentRead = true
+		p.Content = templates
 	}
 
-	err := toml.Unmarshal(p.content, &config)
+	err := toml.Unmarshal(p.Content, &config)
 	if err != nil {
 		return config, err
 	}
@@ -65,12 +65,12 @@ func (p *Parser) ExtractCommands() error {
 		}
 
 		commands = append(commands, Command{
-			Key:   key,
-			Path:  extractValue(&valueMap, "path", ""),
-			Cmd:   extractValue(&valueMap, "cmd", ""),
-			Repo:  extractValue(&valueMap, "repo", ""),
-			Long:  extractValue(&valueMap, "long", ""),
-			Short: extractValue(&valueMap, "short", ""),
+			Key:    key,
+			Repo:   extractValue(&valueMap, "repo", ""),
+			Long:   extractValue(&valueMap, "description", ""),
+			Short:  extractValue(&valueMap, "summary", ""),
+			Branch: extractValue(&valueMap, "branch", ""),
+			Tag:    extractValue(&valueMap, "tag", ""),
 		})
 	}
 

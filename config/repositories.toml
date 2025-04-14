@@ -1,0 +1,5 @@
+[example]
+repo = "https://github.com/DanteDev2102/Glyph.git"
+branch = "development"
+description = "this is a sample command"
+summary = "this is a sample command"
