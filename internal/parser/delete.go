@@ -36,4 +36,6 @@ func (p *Parser) DeleteSection(name string) {
 		fmt.Println(err)
 		return
 	}
+
+	p.Refresh()
 }

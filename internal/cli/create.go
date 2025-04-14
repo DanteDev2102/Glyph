@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/DanteDev2102/Glyph/internal/parser"
 	"github.com/spf13/cobra"
 )
@@ -12,6 +14,11 @@ func (cli *Base) CreateCmd() {
 		Short: "example",
 		Long:  "example",
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(name) == 0 || len(repo) == 0 {
+				fmt.Println("name and repo flags required")
+				return
+			}
+
 			flags := parser.Template{
 				Name:        name,
 				Summary:     summary,

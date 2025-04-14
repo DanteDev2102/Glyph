@@ -50,7 +50,6 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 				}
 
 				execute := exec.Command("git", arg...)
-
 				err := execute.Run()
 				if err != nil {
 					return
@@ -71,7 +70,7 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 // InitCmd initializes the CLI with the "init" command.
 func (cli *Base) InitCmd() {
 	initCmd := &cobra.Command{
-		Use:   "tmpl [template name]",
+		Use:   "init [template name]",
 		Short: "example",
 		Long:  "example",
 	}

@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"os"
+
 	parser "github.com/DanteDev2102/Glyph/internal/parser"
 	cli "github.com/spf13/cobra"
 )
@@ -32,11 +34,12 @@ var (
 )
 
 func init() {
-	conf := &parser.Parser{File: "/app/test.toml"}
+	home, err := os.UserHomeDir()
+	conf := &parser.Parser{File: home + "/.config/Glyph/repositories.toml"}
 
-	err := conf.ExtractCommands()
+	err = conf.ExtractCommands()
 	if err != nil {
-		panic("END")
+		panic(err)
 	}
 
 	Cli = &Base{
