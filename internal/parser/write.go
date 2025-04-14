@@ -110,4 +110,6 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 		fmt.Println(err)
 		return
 	}
+
+	p.Refresh()
 }
