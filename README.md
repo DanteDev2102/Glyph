@@ -41,3 +41,13 @@ sh ~/Glyph/install.sh
 **Restart your terminal and YOU'RE READY TO USE GLYPH!**
 
 Thank you for pointing out the missing section. It's crucial for the installation instructions to be complete.
+
+**Documentation:**
+
+- [**create:**](/docs/create.md)
+
+- [**init**](/docs/init.md)
+
+- [**rm**](/docs/rm.md)
+
+- [**set**](/docs/update.md)
