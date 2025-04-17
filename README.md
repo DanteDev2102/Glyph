@@ -16,12 +16,18 @@ Glyph is a command-line template engine designed to **accelerate the start of yo
 - **Maintain consistency across different projects by using the same foundations.**
 - **Explore and utilize templates shared by the community or your team.**
 
-**Installation Guide**
+### Installation Guide
 
 **Clone the repository**
 
 ```sh
-git clone [https://github.com/DanteDev2102/Glyph.git](https://github.com/DanteDev2102/Glyph.git) ~/Glyph
+git clone https://github.com/DanteDev2102/Glyph.git ~/Glyph
+```
+
+**Compile this repository with go build**
+
+```sh
+go build -o glyph ~/Glyph/cmd/app/main.go
 ```
 
 **Execute the Installation Script**
