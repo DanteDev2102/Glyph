@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/DanteDev2102/Glyph/config"
 	"github.com/DanteDev2102/Glyph/internal/parser"
 	"github.com/spf13/cobra"
 )
@@ -24,25 +25,28 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 					return
 				}
 
+				if len(branch) > 0 && len(tag) > 0 {
+					fmt.Println("use only branch or only tag for init project")
+					return
+				}
+
 				if len(strings.TrimSpace(args[0])) <= 3 {
 					fmt.Println("Not valid path")
 					return
 				}
 
+				var detail string
+
 				arg := []string{"clone", "--depth=1", command.Repo, args[0]}
 
-				detail := command.Tag
-
-				if len(detail) == 0 {
-					detail = command.Branch
-				}
-
-				if len(detail) == 0 {
-					detail = branch
-				}
-
-				if len(detail) == 0 {
+				if tag != "" {
 					detail = tag
+				} else if branch != "" {
+					detail = branch
+				} else if command.Tag != "" {
+					detail = command.Tag
+				} else if command.Branch != "" {
+					detail = command.Branch
 				}
 
 				if len(detail) > 0 {
@@ -52,6 +56,7 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 				execute := exec.Command("git", arg...)
 				err := execute.Run()
 				if err != nil {
+					fmt.Println(err)
 					return
 				}
 
@@ -60,8 +65,15 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 				err = execute.Run()
 				if err != nil {
 					fmt.Println(err)
+					return
 				}
 
+				execute = exec.Command("git", "init", args[0])
+				err = execute.Run()
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
 			},
 		})
 	}
@@ -70,9 +82,9 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 // InitCmd initializes the CLI with the "init" command.
 func (cli *Base) InitCmd() {
 	initCmd := &cobra.Command{
-		Use:   "init [template name]",
-		Short: "example",
-		Long:  "example",
+		Use:   config.InitUse,
+		Short: config.InitSummary,
+		Long:  config.InitDescription,
 	}
 
 	chargeTemplates(initCmd, &cli.Conf.Commmands)
