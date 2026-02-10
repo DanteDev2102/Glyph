@@ -17,10 +17,13 @@ func (cli *Base) UpdateCmd() {
 			cli.Conf.WriteSection(&parser.Template{
 				Name:        name,
 				Repo:        repo,
+				LocalPath:   localPath,
 				Description: description,
 				Summary:     summary,
 				Branch:      branch,
 				Tag:         tag,
+				License:     license,
+				Author:      author,
 			}, args[0])
 		},
 	})

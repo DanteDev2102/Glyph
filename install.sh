@@ -14,8 +14,10 @@ echo "Installing '${CLI_EXECUTABLE}' as a global command..."
 mkdir -p "$GLOBAL_BIN_DIR"
 
 mkdir -p "$CONFIG_DIR"
+mkdir -p "$CONFIG_DIR/licenses"
 
 cp ./config/repositories.toml "$CONFIG_DIR"
+cp ./internal/assets/licenses/* "$CONFIG_DIR/licenses/"
 chmod +r "$HOME/.config/Glyph/repositories.toml"
 
 

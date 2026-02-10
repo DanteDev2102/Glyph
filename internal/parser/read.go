@@ -11,6 +11,11 @@ func (p *Parser) ensureContentRead() error {
 	if !p.ContentRead {
 		templates, err := os.ReadFile(p.File)
 		if err != nil {
+			if os.IsNotExist(err) {
+				p.ContentRead = true
+				p.Content = []byte("")
+				return nil
+			}
 			return err
 		}
 
@@ -36,24 +41,29 @@ func (p *Parser) Read() (map[string]interface{}, error) {
 }
 
 // ExtractCommands reads and processes commands from the configuration file.
-// Optimization: Unmarshals directly into map[string]Command to avoid generic map allocations.
 func (p *Parser) ExtractCommands() error {
 	if err := p.ensureContentRead(); err != nil {
 		return err
 	}
 
-	var data map[string]Command
-	// toml.Unmarshal into a structured map is faster than map[string]interface{}
-	// as it avoids interface boxing and manual type assertion.
+	var data map[string]interface{}
 	err := toml.Unmarshal(p.Content, &data)
 	if err != nil {
 		return err
 	}
 
-	// Pre-allocate slice capacity to avoid multiple re-allocations during the loop.
-	commands := make([]Command, 0, len(data))
+	var commands []Command
+	for key, value := range data {
+		if key == "config" {
+			configBytes, _ := toml.Marshal(value)
+			toml.Unmarshal(configBytes, &p.Config)
+			continue
+		}
 
-	for key, cmd := range data {
+		// Convert value back to bytes to unmarshal into Command struct
+		cmdBytes, _ := toml.Marshal(value)
+		var cmd Command
+		toml.Unmarshal(cmdBytes, &cmd)
 		cmd.Key = key
 		commands = append(commands, cmd)
 	}

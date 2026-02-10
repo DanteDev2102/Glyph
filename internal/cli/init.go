@@ -2,16 +2,85 @@ package cli
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/DanteDev2102/Glyph/config"
+	"github.com/DanteDev2102/Glyph/internal/gitutils"
 	"github.com/DanteDev2102/Glyph/internal/parser"
 	"github.com/spf13/cobra"
 )
 
-func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
+func copyDir(src string, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		target := filepath.Join(dst, rel)
+
+		if info.IsDir() {
+			return os.MkdirAll(target, info.Mode())
+		}
+
+		srcFile, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		dstFile, err := os.Create(target)
+		if err != nil {
+			return err
+		}
+		defer dstFile.Close()
+
+		_, err = io.Copy(dstFile, srcFile)
+		return err
+	})
+}
+
+func getAuthor(tmplAuthor string, globalAuthor string) string {
+	if author != "" {
+		return author
+	}
+	if tmplAuthor != "" {
+		return tmplAuthor
+	}
+	if globalAuthor != "" {
+		return globalAuthor
+	}
+	out, err := exec.Command("git", "config", "user.name").Output()
+	if err == nil {
+		return strings.TrimSpace(string(out))
+	}
+	return "Unknown Author"
+}
+
+func replaceInFile(filePath string, replacements map[string]string) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return
+	}
+
+	s := string(content)
+	for k, v := range replacements {
+		s = strings.ReplaceAll(s, "{{."+k+"}}", v)
+	}
+
+	os.WriteFile(filePath, []byte(s), 0644)
+}
+
+func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Command) {
 	for i := range *commands {
 		command := (*commands)[i]
 
@@ -30,53 +99,106 @@ func chargeTemplates(initCmd *cobra.Command, commands *[]parser.Command) {
 					return
 				}
 
-				if len(strings.TrimSpace(args[0])) <= 3 {
+				dstPath := args[0]
+				if len(strings.TrimSpace(dstPath)) <= 3 {
 					fmt.Println("Not valid path")
 					return
 				}
 
-				var detail string
-
-				arg := []string{"clone", "--depth=1", command.Repo, args[0]}
-
-				if tag != "" {
-					detail = tag
-				} else if branch != "" {
-					detail = branch
-				} else if command.Tag != "" {
-					detail = command.Tag
-				} else if command.Branch != "" {
-					detail = command.Branch
+				var err error
+				if command.LocalPath != "" {
+					err = copyDir(command.LocalPath, dstPath)
+				} else {
+					var b, t string
+					if tag != "" {
+						t = tag
+					} else if branch != "" {
+						b = branch
+					} else if command.Tag != "" {
+						t = command.Tag
+					} else if command.Branch != "" {
+						b = command.Branch
+					}
+					err = gitutils.CloneRepo(command.Repo, dstPath, b, t)
 				}
 
-				if len(detail) > 0 {
-					arg = append(arg, "-b", detail, "--single-branch")
-				}
-
-				execute := exec.Command("git", arg...)
-				err := execute.Run()
 				if err != nil {
 					fmt.Println(err)
 					return
 				}
 
-				gitDir := filepath.Join(args[0], ".git")
-				execute = exec.Command("rm", "-rf", gitDir)
-				err = execute.Run()
-				if err != nil {
-					fmt.Println(err)
-					return
+				// Remove existing .git if it's a clone
+				os.RemoveAll(filepath.Join(dstPath, ".git"))
+
+				// Re-initialize git
+				exec.Command("git", "init", dstPath).Run()
+
+				// Variables replacement
+				projectAuthor := getAuthor(command.Author, cli.Conf.Config.Author)
+				projectName := filepath.Base(dstPath)
+				replacements := map[string]string{
+					"ProjectName": projectName,
+					"Author":      projectAuthor,
+					"Year":        fmt.Sprintf("%d", time.Now().Year()),
 				}
 
-				execute = exec.Command("git", "init", args[0])
-				err = execute.Run()
-				if err != nil {
-					fmt.Println(err)
-					return
+				// Replace in README.md
+				readmePath := filepath.Join(dstPath, "README.md")
+				replaceInFile(readmePath, replacements)
+
+				// License injection
+				selectedLicense := license
+				if command.License != "" && license == "MIT" { // only override default MIT if template specifies another
+					selectedLicense = command.License
+				}
+
+				// Check for --no-license (we'll assume if license is set to "none" via some mechanism)
+				// Since we don't have a boolean flag yet, let's check if the user passed it somehow
+				// or if we should add it to main.go. I'll check the flags I added.
+				// I added: Cli.Root.PersistentFlags().StringVarP(&license, "license", "L", "MIT", ...)
+				// User said: "el usuario debe colocar un flag --no-licence en caso de que no quiera usar ninguna licencia"
+
+				// I'll check if a "no-license" flag was passed. I'll need to add it to main.go too.
+
+				if !noLicense && license != "none" {
+					licenseName := strings.ToLower(selectedLicense)
+					home, _ := os.UserHomeDir()
+					// We should probably look in the installation directory for licenses,
+					// but for now let's look in a predictable place or embedded?
+					// Let's assume they are in ~/.config/Glyph/licenses/
+					licensePath := filepath.Join(home, ".config", "Glyph", "licenses", "LICENSE."+licenseName)
+
+					// If not found there, try the local assets (if running from source)
+					if _, err := os.Stat(licensePath); os.IsNotExist(err) {
+						licensePath = filepath.Join("internal", "assets", "licenses", "LICENSE."+licenseName)
+					}
+
+					if _, err := os.Stat(licensePath); err == nil {
+						dstLicense := filepath.Join(dstPath, "LICENSE")
+						copyFile(licensePath, dstLicense)
+						replaceInFile(dstLicense, replacements)
+					}
 				}
 			},
 		})
 	}
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	return err
 }
 
 // InitCmd initializes the CLI with the "init" command.
@@ -87,7 +209,7 @@ func (cli *Base) InitCmd() {
 		Long:  config.InitDescription,
 	}
 
-	chargeTemplates(initCmd, &cli.Conf.Commmands)
+	chargeTemplates(cli, initCmd, &cli.Conf.Commmands)
 
 	cli.Root.AddCommand(initCmd)
 }
