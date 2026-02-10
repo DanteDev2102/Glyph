@@ -10,12 +10,12 @@ type Parser struct {
 
 // Command represents a parsed command with its associated metadata.
 type Command struct {
-	Repo   string
-	Key    string
-	Short  string
-	Long   string
-	Branch string
-	Tag    string
+	Repo   string `toml:"repo"`
+	Key    string `toml:"-"`
+	Short  string `toml:"summary"`
+	Long   string `toml:"description"`
+	Branch string `toml:"branch"`
+	Tag    string `toml:"tag"`
 }
 
 // IParser defines the interface for parsing operations.
