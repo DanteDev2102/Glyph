@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
@@ -12,10 +13,13 @@ import (
 type Template struct {
 	Name        string
 	Repo        string
+	LocalPath   string
 	Description string
 	Summary     string
 	Branch      string
 	Tag         string
+	License     string
+	Author      string
 }
 
 func (p *Parser) Write(tmpl *Template) {
@@ -27,20 +31,22 @@ func (p *Parser) Write(tmpl *Template) {
 	}
 
 	var builder strings.Builder
-	builder.Grow(len(p.Content) + len(tmpl.Name) + len(tmpl.Repo) + 50)
+	builder.Grow(len(p.Content) + len(tmpl.Name) + len(tmpl.Repo) + 100)
 
-	builder.WriteString(
-		fmt.Sprintf("%s\n[%s]\nrepo = \"%s\"\n", string(p.Content), tmpl.Name, tmpl.Repo),
-	)
+	builder.WriteString(fmt.Sprintf("%s\n[%s]\n", string(p.Content), tmpl.Name))
 
 	fields := []struct {
 		key   string
 		value string
 	}{
+		{"repo", tmpl.Repo},
+		{"local_path", tmpl.LocalPath},
 		{"branch", tmpl.Branch},
 		{"tag", tmpl.Tag},
 		{"summary", tmpl.Summary},
 		{"description", tmpl.Description},
+		{"license", tmpl.License},
+		{"author", tmpl.Author},
 	}
 
 	for _, field := range fields {
@@ -50,6 +56,9 @@ func (p *Parser) Write(tmpl *Template) {
 	}
 
 	builder.WriteString("\n")
+
+	dir := filepath.Dir(p.File)
+	os.MkdirAll(dir, 0755)
 
 	err := os.WriteFile(p.File, []byte(builder.String()), 0644)
 	if err != nil {
@@ -82,14 +91,16 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 	}
 
 	var newValues = make(map[string]string)
-	newValues = map[string]string{
-		"repo":        config[name]["repo"],
-		"summary":     config[name]["summary"],
-		"description": config[name]["description"],
+	for k, v := range config[name] {
+		newValues[k] = v
 	}
 
 	if len(tmpl.Repo) > 0 {
 		newValues["repo"] = tmpl.Repo
+	}
+
+	if len(tmpl.LocalPath) > 0 {
+		newValues["local_path"] = tmpl.LocalPath
 	}
 
 	if len(tmpl.Branch) > 0 {
@@ -108,6 +119,14 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 		newValues["tag"] = tmpl.Tag
 	}
 
+	if len(tmpl.License) > 0 {
+		newValues["license"] = tmpl.License
+	}
+
+	if len(tmpl.Author) > 0 {
+		newValues["author"] = tmpl.Author
+	}
+
 	if len(tmpl.Name) > 0 {
 		delete(config, name)
 		config[tmpl.Name] = newValues
@@ -120,6 +139,9 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 		fmt.Println(er)
 		return
 	}
+
+	dir := filepath.Dir(p.File)
+	os.MkdirAll(dir, 0755)
 
 	err = os.WriteFile(p.File, data, 0644)
 	if err != nil {
