@@ -131,7 +131,7 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 				os.RemoveAll(filepath.Join(dstPath, ".git"))
 
 				// Re-initialize git
-				exec.Command("git", "init", dstPath).Run()
+				exec.Command("git", "init", "--", dstPath).Run()
 
 				// Variables replacement
 				projectAuthor := getAuthor(command.Author, cli.Conf.Config.Author)
@@ -162,6 +162,10 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 
 				if !noLicense && license != "none" {
 					licenseName := strings.ToLower(selectedLicense)
+					if strings.Contains(licenseName, "..") || strings.Contains(licenseName, "/") || strings.Contains(licenseName, "\\") {
+						fmt.Println("Invalid license name, skipping license injection.")
+						return
+					}
 					home, _ := os.UserHomeDir()
 					// We should probably look in the installation directory for licenses,
 					// but for now let's look in a predictable place or embedded?
