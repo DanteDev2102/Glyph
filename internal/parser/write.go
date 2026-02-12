@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -23,45 +22,46 @@ type Template struct {
 }
 
 func (p *Parser) Write(tmpl *Template) {
-	for _, value := range p.Commmands {
-		if value.Key == tmpl.Name {
-			fmt.Println("This command already exist")
-			return
+	var config map[string]interface{}
+	if err := toml.Unmarshal(p.Content, &config); err != nil || config == nil {
+		config = make(map[string]interface{})
+	}
+
+	if _, ok := config[tmpl.Name]; ok {
+		fmt.Println("This command or section already exists")
+		return
+	}
+
+	newTmpl := map[string]string{
+		"repo":        tmpl.Repo,
+		"local_path":  tmpl.LocalPath,
+		"branch":      tmpl.Branch,
+		"tag":         tmpl.Tag,
+		"summary":     tmpl.Summary,
+		"description": tmpl.Description,
+		"license":     tmpl.License,
+		"author":      tmpl.Author,
+	}
+
+	// Remove empty strings to keep config clean
+	for k, v := range newTmpl {
+		if v == "" {
+			delete(newTmpl, k)
 		}
 	}
 
-	var builder strings.Builder
-	builder.Grow(len(p.Content) + len(tmpl.Name) + len(tmpl.Repo) + 100)
+	config[tmpl.Name] = newTmpl
 
-	builder.WriteString(fmt.Sprintf("%s\n[%s]\n", string(p.Content), tmpl.Name))
-
-	fields := []struct {
-		key   string
-		value string
-	}{
-		{"repo", tmpl.Repo},
-		{"local_path", tmpl.LocalPath},
-		{"branch", tmpl.Branch},
-		{"tag", tmpl.Tag},
-		{"summary", tmpl.Summary},
-		{"description", tmpl.Description},
-		{"license", tmpl.License},
-		{"author", tmpl.Author},
+	data, err := toml.Marshal(config)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
-
-	for _, field := range fields {
-		if field.value != "" {
-			builder.WriteString(fmt.Sprintf("%s = \"%s\"\n", field.key, field.value))
-		}
-	}
-
-	builder.WriteString("\n")
 
 	dir := filepath.Dir(p.File)
 	os.MkdirAll(dir, 0755)
 
-	err := os.WriteFile(p.File, []byte(builder.String()), 0644)
-	if err != nil {
+	if err := os.WriteFile(p.File, data, 0644); err != nil {
 		fmt.Println(err)
 		return
 	}
