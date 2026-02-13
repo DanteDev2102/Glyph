@@ -67,6 +67,16 @@ func getAuthor(tmplAuthor string, globalAuthor string) string {
 }
 
 func replaceInFile(filePath string, replacements map[string]string) {
+	// Security check: Don't follow symlinks to prevent path traversal
+	info, err := os.Lstat(filePath)
+	if err != nil {
+		return
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		fmt.Printf("Warning: Skipping replacement in %s as it is a symlink\n", filePath)
+		return
+	}
+
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return
@@ -99,9 +109,9 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 					return
 				}
 
-				dstPath := args[0]
-				if len(strings.TrimSpace(dstPath)) <= 3 {
-					fmt.Println("Not valid path")
+				dstPath := filepath.Clean(args[0])
+				if dstPath == "/" || dstPath == "." || dstPath == ".." || len(strings.TrimSpace(dstPath)) <= 1 {
+					fmt.Println("Dangerous or invalid path provided")
 					return
 				}
 
