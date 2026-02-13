@@ -88,3 +88,100 @@ func TestDstPathValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestCopyFile_Symlink(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	targetFile := filepath.Join(tmpDir, "target")
+	err = os.WriteFile(targetFile, []byte("Original Content"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dstFile := filepath.Join(tmpDir, "symlink_to_target")
+	err = os.Symlink(targetFile, dstFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	srcFile := filepath.Join(tmpDir, "source")
+	err = os.WriteFile(srcFile, []byte("Malicious Content"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = copyFile(srcFile, dstFile)
+	if err == nil {
+		t.Error("Expected error when copying to a symlink destination, but got nil")
+	} else if !strings.Contains(err.Error(), "destination is a symlink") {
+		t.Errorf("Expected error containing 'destination is a symlink', but got: %v", err)
+	}
+
+	content, err := os.ReadFile(targetFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(content) == "Malicious Content" {
+		t.Errorf("Security Vulnerability: copyFile followed symlink and modified target file!")
+	}
+}
+
+func TestCopyDir_Symlink(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create source directory with a file
+	srcDir := filepath.Join(tmpDir, "src")
+	err = os.MkdirAll(srcDir, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.WriteFile(filepath.Join(srcDir, "file.txt"), []byte("Source Content"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create destination directory with a symlink pointing elsewhere
+	dstDir := filepath.Join(tmpDir, "dst")
+	err = os.MkdirAll(dstDir, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetFile := filepath.Join(tmpDir, "secret")
+	err = os.WriteFile(targetFile, []byte("Secret Content"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink in dst that points to secret
+	err = os.Symlink(targetFile, filepath.Join(dstDir, "file.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Try to copy src to dst
+	err = copyDir(srcDir, dstDir)
+	if err == nil {
+		t.Error("Expected error when copying to a directory containing a symlink, but got nil")
+	} else if !strings.Contains(err.Error(), "destination is a symlink") {
+		t.Errorf("Expected error containing 'destination is a symlink', but got: %v", err)
+	}
+
+	// Check if secret file was NOT modified
+	content, err := os.ReadFile(targetFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(content) == "Source Content" {
+		t.Errorf("Security Vulnerability: copyDir followed symlink and modified target file!")
+	}
+}

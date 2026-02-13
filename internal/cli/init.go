@@ -32,6 +32,12 @@ func copyDir(src string, dst string) error {
 			return os.MkdirAll(target, info.Mode())
 		}
 
+		// Security check: Don't follow symlinks at the destination
+		targetInfo, err := os.Lstat(target)
+		if err == nil && targetInfo.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("refusing to copy to %s: destination is a symlink", target)
+		}
+
 		srcFile, err := os.Open(path)
 		if err != nil {
 			return err
@@ -199,6 +205,12 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 }
 
 func copyFile(src, dst string) error {
+	// Security check: Don't follow symlinks at the destination
+	info, err := os.Lstat(dst)
+	if err == nil && info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("refusing to copy to %s: destination is a symlink", dst)
+	}
+
 	in, err := os.Open(src)
 	if err != nil {
 		return err
