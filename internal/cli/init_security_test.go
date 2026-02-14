@@ -88,3 +88,61 @@ func TestDstPathValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestCopyFile_Symlink(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-copyfile-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcFile := filepath.Join(tmpDir, "src")
+	os.WriteFile(srcFile, []byte("New Content"), 0644)
+
+	targetFile := filepath.Join(tmpDir, "target")
+	os.WriteFile(targetFile, []byte("Original Content"), 0644)
+
+	symlinkFile := filepath.Join(tmpDir, "symlink")
+	os.Symlink(targetFile, symlinkFile)
+
+	err = copyFile(srcFile, symlinkFile)
+	if err == nil {
+		t.Errorf("copyFile should have failed when destination is a symlink")
+	}
+
+	content, _ := os.ReadFile(targetFile)
+	if string(content) != "Original Content" {
+		t.Errorf("Target file was modified through symlink!")
+	}
+}
+
+func TestCopyDir_Symlink(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-copydir-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcDir := filepath.Join(tmpDir, "src")
+	os.Mkdir(srcDir, 0755)
+	os.WriteFile(filepath.Join(srcDir, "file1"), []byte("New Content"), 0644)
+
+	dstDir := filepath.Join(tmpDir, "dst")
+	os.Mkdir(dstDir, 0755)
+
+	targetFile := filepath.Join(tmpDir, "target")
+	os.WriteFile(targetFile, []byte("Original Content"), 0644)
+
+	symlinkFile := filepath.Join(dstDir, "file1")
+	os.Symlink(targetFile, symlinkFile)
+
+	err = copyDir(srcDir, dstDir)
+	if err == nil {
+		t.Errorf("copyDir should have failed when destination contains a symlink")
+	}
+
+	content, _ := os.ReadFile(targetFile)
+	if string(content) != "Original Content" {
+		t.Errorf("Target file was modified through symlink!")
+	}
+}

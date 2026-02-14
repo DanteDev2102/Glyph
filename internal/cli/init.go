@@ -21,12 +21,24 @@ func copyDir(src string, dst string) error {
 			return err
 		}
 
+		// Skip symlinks in source to prevent information disclosure
+		if info.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+
 		rel, err := filepath.Rel(src, path)
 		if err != nil {
 			return err
 		}
 
 		target := filepath.Join(dst, rel)
+
+		// Security check: Don't follow symlinks at destination
+		if targetInfo, err := os.Lstat(target); err == nil {
+			if targetInfo.Mode()&os.ModeSymlink != 0 {
+				return fmt.Errorf("security error: destination path %s is a symlink", target)
+			}
+		}
 
 		if info.IsDir() {
 			return os.MkdirAll(target, info.Mode())
@@ -199,6 +211,21 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 }
 
 func copyFile(src, dst string) error {
+	// Security check: Don't follow symlinks at source or destination
+	srcInfo, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+	if srcInfo.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("security error: source %s is a symlink", src)
+	}
+
+	if dstInfo, err := os.Lstat(dst); err == nil {
+		if dstInfo.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("security error: destination %s is a symlink", dst)
+		}
+	}
+
 	in, err := os.Open(src)
 	if err != nil {
 		return err
