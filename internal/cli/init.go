@@ -21,12 +21,22 @@ func copyDir(src string, dst string) error {
 			return err
 		}
 
+		// Security: skip symlinks in source to prevent information disclosure
+		if info.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+
 		rel, err := filepath.Rel(src, path)
 		if err != nil {
 			return err
 		}
 
 		target := filepath.Join(dst, rel)
+
+		// Security: check if destination already exists and is a symlink
+		if dstInfo, err := os.Lstat(target); err == nil && dstInfo.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("security error: destination path %s is a symbolic link", target)
+		}
 
 		if info.IsDir() {
 			return os.MkdirAll(target, info.Mode())
@@ -115,6 +125,12 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 					return
 				}
 
+				// Security check: ensure dstPath itself is not a symlink
+				if info, err := os.Lstat(dstPath); err == nil && info.Mode()&os.ModeSymlink != 0 {
+					fmt.Println("Security error: destination path is a symbolic link")
+					return
+				}
+
 				var err error
 				if command.LocalPath != "" {
 					err = copyDir(command.LocalPath, dstPath)
@@ -199,6 +215,11 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 }
 
 func copyFile(src, dst string) error {
+	// Security: check if destination already exists and is a symlink
+	if dstInfo, err := os.Lstat(dst); err == nil && dstInfo.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("security error: destination path %s is a symbolic link", dst)
+	}
+
 	in, err := os.Open(src)
 	if err != nil {
 		return err
