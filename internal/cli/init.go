@@ -21,12 +21,24 @@ func copyDir(src string, dst string) error {
 			return err
 		}
 
+		// Security check: Skip symbolic links at the source to prevent information disclosure
+		if info.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+
 		rel, err := filepath.Rel(src, path)
 		if err != nil {
 			return err
 		}
 
 		target := filepath.Join(dst, rel)
+
+		// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
+		if info, err := os.Lstat(target); err == nil {
+			if info.Mode()&os.ModeSymlink != 0 {
+				return fmt.Errorf("destination %s is a symbolic link", target)
+			}
+		}
 
 		if info.IsDir() {
 			return os.MkdirAll(target, info.Mode())
@@ -115,6 +127,14 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 					return
 				}
 
+				// Security check: Don't allow initialization into a symbolic link
+				if info, err := os.Lstat(dstPath); err == nil {
+					if info.Mode()&os.ModeSymlink != 0 {
+						fmt.Printf("Destination path %s is a symbolic link, which is not allowed for security reasons.\n", dstPath)
+						return
+					}
+				}
+
 				var err error
 				if command.LocalPath != "" {
 					err = copyDir(command.LocalPath, dstPath)
@@ -199,6 +219,13 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 }
 
 func copyFile(src, dst string) error {
+	// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
+	if info, err := os.Lstat(dst); err == nil {
+		if info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("destination %s is a symbolic link", dst)
+		}
+	}
+
 	in, err := os.Open(src)
 	if err != nil {
 		return err
