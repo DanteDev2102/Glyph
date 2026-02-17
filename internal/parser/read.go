@@ -9,6 +9,12 @@ import (
 
 func (p *Parser) ensureContentRead() error {
 	if !p.ContentRead {
+		if info, err := os.Lstat(p.File); err == nil {
+			if info.Mode()&os.ModeSymlink != 0 {
+				return fmt.Errorf("security error: %s is a symbolic link", p.File)
+			}
+		}
+
 		templates, err := os.ReadFile(p.File)
 		if err != nil {
 			if os.IsNotExist(err) {
