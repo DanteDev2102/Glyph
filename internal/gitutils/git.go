@@ -1,8 +1,10 @@
 package gitutils
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -77,13 +79,28 @@ func RequestAuth() (transport.AuthMethod, error) {
 		prompt := promptui.Prompt{
 			Label:   "Path to SSH Key",
 			Default: home + "/.ssh/id_rsa",
+			Validate: func(input string) error {
+				if _, err := os.Stat(input); os.IsNotExist(err) {
+					return errors.New("ssh key file does not exist")
+				}
+				return nil
+			},
 		}
 		keyPath, err := prompt.Run()
 		if err != nil {
 			return nil, err
 		}
 
-		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, "")
+		promptPass := promptui.Prompt{
+			Label: "SSH Key Passphrase (optional)",
+			Mask:  '*',
+		}
+		passphrase, err := promptPass.Run()
+		if err != nil {
+			return nil, err
+		}
+
+		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, passphrase)
 		if err != nil {
 			return nil, err
 		}
@@ -91,6 +108,12 @@ func RequestAuth() (transport.AuthMethod, error) {
 	} else {
 		promptUser := promptui.Prompt{
 			Label: "Username",
+			Validate: func(input string) error {
+				if len(strings.TrimSpace(input)) == 0 {
+					return errors.New("username cannot be empty")
+				}
+				return nil
+			},
 		}
 		username, err := promptUser.Run()
 		if err != nil {
@@ -100,6 +123,12 @@ func RequestAuth() (transport.AuthMethod, error) {
 		promptPass := promptui.Prompt{
 			Label: "Token/Password",
 			Mask:  '*',
+			Validate: func(input string) error {
+				if len(strings.TrimSpace(input)) == 0 {
+					return errors.New("token/password cannot be empty")
+				}
+				return nil
+			},
 		}
 		password, err := promptPass.Run()
 		if err != nil {

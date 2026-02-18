@@ -12,3 +12,8 @@
 **Vulnerability:** Symlink attack on the global configuration file. An attacker could pre-create the configuration file as a symlink to a sensitive file, causing the tool to overwrite it when saving templates.
 **Learning:** Hardening the CLI's project initialization is insufficient if the configuration persistence layer remains vulnerable to the same class of attacks.
 **Prevention:** Always use `os.Lstat` to verify that a file is not a symbolic link before performing read or write operations on shared or predictable configuration paths.
+
+## 2025-05-15 - Support for Encrypted SSH Keys
+**Vulnerability:** Weak security practice due to lack of passphrase support. The tool previously only supported unencrypted SSH keys, which could encourage users to use less secure authentication methods.
+**Learning:** Hardcoding an empty passphrase in SSH authentication logic significantly reduces the security posture of the tool by making encrypted keys unusable.
+**Prevention:** Always provide an option for users to enter a passphrase when using SSH key authentication, and ensure it is collected securely using masked inputs.
