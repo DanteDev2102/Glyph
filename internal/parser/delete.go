@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -31,7 +30,7 @@ func (p *Parser) DeleteSection(name string) {
 		return
 	}
 
-	err = os.WriteFile(p.File, data, 0644)
+	err = p.safeWrite(data)
 	if err != nil {
 		fmt.Println(err)
 		return
