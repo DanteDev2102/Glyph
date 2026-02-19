@@ -77,20 +77,43 @@ func RequestAuth() (transport.AuthMethod, error) {
 		prompt := promptui.Prompt{
 			Label:   "Path to SSH Key",
 			Default: home + "/.ssh/id_rsa",
+			Validate: func(input string) error {
+				if _, err := os.Stat(input); os.IsNotExist(err) {
+					return fmt.Errorf("SSH key file does not exist")
+				}
+				return nil
+			},
 		}
 		keyPath, err := prompt.Run()
 		if err != nil {
 			return nil, err
 		}
 
-		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, "")
+		promptPass := promptui.Prompt{
+			Label: "SSH Key Passphrase (optional)",
+			Mask:  '*',
+		}
+		passphrase, err := promptPass.Run()
+		if err != nil {
+			return nil, err
+		}
+
+		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, passphrase)
 		if err != nil {
 			return nil, err
 		}
 		return publicKeys, nil
 	} else {
+		validate := func(input string) error {
+			if len(input) == 0 {
+				return fmt.Errorf("this field cannot be empty")
+			}
+			return nil
+		}
+
 		promptUser := promptui.Prompt{
-			Label: "Username",
+			Label:    "Username",
+			Validate: validate,
 		}
 		username, err := promptUser.Run()
 		if err != nil {
@@ -98,8 +121,9 @@ func RequestAuth() (transport.AuthMethod, error) {
 		}
 
 		promptPass := promptui.Prompt{
-			Label: "Token/Password",
-			Mask:  '*',
+			Label:    "Token/Password",
+			Mask:     '*',
+			Validate: validate,
 		}
 		password, err := promptPass.Run()
 		if err != nil {
