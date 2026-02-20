@@ -12,3 +12,8 @@
 **Vulnerability:** Symlink attack on the global configuration file. An attacker could pre-create the configuration file as a symlink to a sensitive file, causing the tool to overwrite it when saving templates.
 **Learning:** Hardening the CLI's project initialization is insufficient if the configuration persistence layer remains vulnerable to the same class of attacks.
 **Prevention:** Always use `os.Lstat` to verify that a file is not a symbolic link before performing read or write operations on shared or predictable configuration paths.
+
+## 2026-03-05 - Hardening CLI Authentication Prompts
+**Vulnerability:** Weak input validation and missing support for secure authentication practices (e.g., encrypted SSH keys) in interactive prompts.
+**Learning:** Interactive prompts must be as robust as any other input source. Failing to validate credentials or support best practices like passphrase-protected keys can lead to confusing failures or push users toward less secure methods.
+**Prevention:** Use `promptui.Prompt.Validate` to enforce non-empty inputs and verify file existence (e.g., for SSH keys) early. Always support masked passphrase inputs for sensitive operations instead of assuming unencrypted keys.
