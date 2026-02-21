@@ -1,8 +1,10 @@
 package gitutils
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -60,6 +62,14 @@ func ValidateRepo(url string) (transport.AuthMethod, error) {
 	return nil, err
 }
 
+// validateNotEmpty checks if the input is not empty or just whitespace.
+func validateNotEmpty(input string) error {
+	if len(strings.TrimSpace(input)) == 0 {
+		return errors.New("input cannot be empty")
+	}
+	return nil
+}
+
 // RequestAuth prompts the user for authentication credentials.
 func RequestAuth() (transport.AuthMethod, error) {
 	prompt := promptui.Select{
@@ -73,24 +83,43 @@ func RequestAuth() (transport.AuthMethod, error) {
 	}
 
 	if result == "SSH Key" {
-		home, _ := os.UserHomeDir()
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("could not get home directory: %v", err)
+		}
 		prompt := promptui.Prompt{
 			Label:   "Path to SSH Key",
 			Default: home + "/.ssh/id_rsa",
+			Validate: func(input string) error {
+				if _, err := os.Stat(input); err != nil {
+					return fmt.Errorf("file does not exist: %v", err)
+				}
+				return nil
+			},
 		}
 		keyPath, err := prompt.Run()
 		if err != nil {
 			return nil, err
 		}
 
-		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, "")
+		promptPassphrase := promptui.Prompt{
+			Label: "SSH Key Passphrase (leave empty if none)",
+			Mask:  '*',
+		}
+		passphrase, err := promptPassphrase.Run()
+		if err != nil {
+			return nil, err
+		}
+
+		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, passphrase)
 		if err != nil {
 			return nil, err
 		}
 		return publicKeys, nil
 	} else {
 		promptUser := promptui.Prompt{
-			Label: "Username",
+			Label:    "Username",
+			Validate: validateNotEmpty,
 		}
 		username, err := promptUser.Run()
 		if err != nil {
@@ -98,8 +127,9 @@ func RequestAuth() (transport.AuthMethod, error) {
 		}
 
 		promptPass := promptui.Prompt{
-			Label: "Token/Password",
-			Mask:  '*',
+			Label:    "Token/Password",
+			Mask:     '*',
+			Validate: validateNotEmpty,
 		}
 		password, err := promptPass.Run()
 		if err != nil {

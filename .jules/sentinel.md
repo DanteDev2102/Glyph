@@ -12,3 +12,8 @@
 **Vulnerability:** Symlink attack on the global configuration file. An attacker could pre-create the configuration file as a symlink to a sensitive file, causing the tool to overwrite it when saving templates.
 **Learning:** Hardening the CLI's project initialization is insufficient if the configuration persistence layer remains vulnerable to the same class of attacks.
 **Prevention:** Always use `os.Lstat` to verify that a file is not a symbolic link before performing read or write operations on shared or predictable configuration paths.
+
+## 2026-02-21 - Git Authentication Hardening
+**Vulnerability:** Insecure git authentication handling. The tool lacked input validation for usernames and passwords, ignored home directory errors, and did not support SSH key passphrases, preventing the use of encrypted keys.
+**Learning:** Even internal CLI tools must validate user input for authentication to prevent confusing errors and support standard security practices like encrypted SSH keys. Masking sensitive inputs is critical for terminal security.
+**Prevention:** Always use masked prompts for secrets and implement validation functions for all authentication-related inputs. Handle system errors (like home directory retrieval) gracefully to avoid undefined behavior.
