@@ -12,3 +12,8 @@
 **Vulnerability:** Symlink attack on the global configuration file. An attacker could pre-create the configuration file as a symlink to a sensitive file, causing the tool to overwrite it when saving templates.
 **Learning:** Hardening the CLI's project initialization is insufficient if the configuration persistence layer remains vulnerable to the same class of attacks.
 **Prevention:** Always use `os.Lstat` to verify that a file is not a symbolic link before performing read or write operations on shared or predictable configuration paths.
+
+## 2026-03-20 - Credential Validation and Information Disclosure
+**Vulnerability:** Lack of input validation in authentication prompts and information disclosure via stack traces. Users could provide empty credentials or invalid SSH key paths, and configuration errors would trigger a panic, leaking internal details.
+**Learning:** Authentication flows should always validate inputs to fail early and securely. Global initialization in CLI tools must handle errors gracefully instead of panicking to avoid exposing internal state to users.
+**Prevention:** Use validation functions for all user inputs in interactive prompts. Replace `panic` with controlled exits and sanitized error messages in the application's entry points.

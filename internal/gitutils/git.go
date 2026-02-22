@@ -1,8 +1,10 @@
 package gitutils
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -60,6 +62,22 @@ func ValidateRepo(url string) (transport.AuthMethod, error) {
 	return nil, err
 }
 
+// ValidateNonEmpty ensures that the input is not empty or just whitespace.
+func ValidateNonEmpty(input string) error {
+	if strings.TrimSpace(input) == "" {
+		return errors.New("input cannot be empty")
+	}
+	return nil
+}
+
+// ValidateFileExists ensures that the provided path points to an existing file.
+func ValidateFileExists(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return errors.New("file does not exist")
+	}
+	return nil
+}
+
 // RequestAuth prompts the user for authentication credentials.
 func RequestAuth() (transport.AuthMethod, error) {
 	prompt := promptui.Select{
@@ -75,22 +93,33 @@ func RequestAuth() (transport.AuthMethod, error) {
 	if result == "SSH Key" {
 		home, _ := os.UserHomeDir()
 		prompt := promptui.Prompt{
-			Label:   "Path to SSH Key",
-			Default: home + "/.ssh/id_rsa",
+			Label:    "Path to SSH Key",
+			Default:  home + "/.ssh/id_rsa",
+			Validate: ValidateFileExists,
 		}
 		keyPath, err := prompt.Run()
 		if err != nil {
 			return nil, err
 		}
 
-		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, "")
+		promptPassphrase := promptui.Prompt{
+			Label: "Passphrase (optional)",
+			Mask:  '*',
+		}
+		passphrase, err := promptPassphrase.Run()
+		if err != nil {
+			return nil, err
+		}
+
+		publicKeys, err := ssh.NewPublicKeysFromFile("git", keyPath, passphrase)
 		if err != nil {
 			return nil, err
 		}
 		return publicKeys, nil
 	} else {
 		promptUser := promptui.Prompt{
-			Label: "Username",
+			Label:    "Username",
+			Validate: ValidateNonEmpty,
 		}
 		username, err := promptUser.Run()
 		if err != nil {
@@ -98,8 +127,9 @@ func RequestAuth() (transport.AuthMethod, error) {
 		}
 
 		promptPass := promptui.Prompt{
-			Label: "Token/Password",
-			Mask:  '*',
+			Label:    "Token/Password",
+			Mask:     '*',
+			Validate: ValidateNonEmpty,
 		}
 		password, err := promptPass.Run()
 		if err != nil {
