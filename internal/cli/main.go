@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
 	parser "github.com/DanteDev2102/Glyph/internal/parser"
@@ -44,7 +45,8 @@ func init() {
 
 	err = conf.ExtractCommands()
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
 	}
 
 	Cli = &Base{
