@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/DanteDev2102/Glyph/config"
 	"github.com/DanteDev2102/Glyph/internal/parser"
 	"github.com/spf13/cobra"
@@ -14,6 +16,13 @@ func (cli *Base) UpdateCmd() {
 		Long:  config.SetDescription,
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			if name != "" {
+				if err := parser.ValidateName(name); err != nil {
+					fmt.Printf("Error: %v\n", err)
+					return
+				}
+			}
+
 			cli.Conf.WriteSection(&parser.Template{
 				Name:        name,
 				Repo:        repo,

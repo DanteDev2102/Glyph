@@ -24,6 +24,11 @@ func (cli *Base) CreateCmd() {
 				return
 			}
 
+			if err := parser.ValidateName(name); err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return
+			}
+
 			if repo != "" {
 				_, err := gitutils.ValidateRepo(repo)
 				if err != nil {

@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"os"
+	"regexp"
 )
 
 // Config holds global configuration for Glyph.
@@ -50,4 +51,19 @@ func (p *Parser) safeWrite(data []byte) error {
 	}
 
 	return os.WriteFile(p.File, data, 0644)
+}
+
+// ValidateName ensures the template name is not a reserved keyword and contains only valid characters.
+func ValidateName(name string) error {
+	if name == "config" {
+		return fmt.Errorf("'%s' is a reserved name", name)
+	}
+
+	// Only allow alphanumeric characters, hyphens and underscores to ensure compatibility with CLI and TOML
+	validName := regexp.MustCompile(`^[a-zA-Z0-9-_]+$`)
+	if !validName.MatchString(name) {
+		return fmt.Errorf("invalid name '%s': only alphanumeric characters, hyphens, and underscores are allowed", name)
+	}
+
+	return nil
 }

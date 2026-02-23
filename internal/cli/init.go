@@ -219,6 +219,13 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 }
 
 func copyFile(src, dst string) error {
+	// Security check: Skip symbolic links at the source to prevent information disclosure
+	if info, err := os.Lstat(src); err == nil {
+		if info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("source %s is a symbolic link", src)
+		}
+	}
+
 	// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
 	if info, err := os.Lstat(dst); err == nil {
 		if info.Mode()&os.ModeSymlink != 0 {

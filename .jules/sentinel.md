@@ -17,3 +17,8 @@
 **Vulnerability:** Lack of input validation in authentication prompts and information disclosure via stack traces. Users could provide empty credentials or invalid SSH key paths, and configuration errors would trigger a panic, leaking internal details.
 **Learning:** Authentication flows should always validate inputs to fail early and securely. Global initialization in CLI tools must handle errors gracefully instead of panicking to avoid exposing internal state to users.
 **Prevention:** Use validation functions for all user inputs in interactive prompts. Replace `panic` with controlled exits and sanitized error messages in the application's entry points.
+
+## 2024-05-24 - Reserved Keyword and Name Validation
+**Vulnerability:** Global configuration overwrite via template name collision. The tool used the reserved keyword `config` for global settings, but allowed users to create templates with the same name, overwriting or corrupting the global configuration section.
+**Learning:** In applications using a shared name space (like TOML keys or CLI subcommands), reserved keywords must be explicitly validated and rejected in user-controlled inputs.
+**Prevention:** Implement a strict validation function for all user-provided identifiers that rejects reserved keywords and enforces a safe character set (e.g., alphanumeric and basic separators) to prevent logical collisions and injection risks.
