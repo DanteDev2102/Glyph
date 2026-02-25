@@ -17,3 +17,8 @@
 **Vulnerability:** Lack of input validation in authentication prompts and information disclosure via stack traces. Users could provide empty credentials or invalid SSH key paths, and configuration errors would trigger a panic, leaking internal details.
 **Learning:** Authentication flows should always validate inputs to fail early and securely. Global initialization in CLI tools must handle errors gracefully instead of panicking to avoid exposing internal state to users.
 **Prevention:** Use validation functions for all user inputs in interactive prompts. Replace `panic` with controlled exits and sanitized error messages in the application's entry points.
+
+## 2026-04-15 - Incomplete Symlink Hardening in File Operations
+**Vulnerability:** Information disclosure via symlink at source in `copyFile`. While `copyDir` and the destination of `copyFile` were hardened, the source of `copyFile` remained vulnerable.
+**Learning:** Hardening one side of a file operation (destination) or one variant of an operation (`copyDir`) does not guarantee the other is secure. Security audits must verify every path in every I/O function.
+**Prevention:** Always apply symmetric symlink protections to both source and destination in all file copying utilities. Verify hardening with negative tests for both source and destination symlinks.
