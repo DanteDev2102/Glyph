@@ -17,3 +17,8 @@
 **Vulnerability:** Lack of input validation in authentication prompts and information disclosure via stack traces. Users could provide empty credentials or invalid SSH key paths, and configuration errors would trigger a panic, leaking internal details.
 **Learning:** Authentication flows should always validate inputs to fail early and securely. Global initialization in CLI tools must handle errors gracefully instead of panicking to avoid exposing internal state to users.
 **Prevention:** Use validation functions for all user inputs in interactive prompts. Replace `panic` with controlled exits and sanitized error messages in the application's entry points.
+
+## 2026-04-12 - Secure Configuration File Permissions
+**Vulnerability:** Configuration file created with world-readable permissions (0644).
+**Learning:** Default file creation permissions in many languages/environments are overly permissive for configuration files that may contain sensitive user information or preferences.
+**Prevention:** Explicitly set restricted permissions (e.g., 0600) when creating or writing to configuration files to ensure only the owner can access them.
