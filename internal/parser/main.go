@@ -49,5 +49,5 @@ func (p *Parser) safeWrite(data []byte) error {
 		}
 	}
 
-	return os.WriteFile(p.File, data, 0644)
+	return os.WriteFile(p.File, data, 0600)
 }

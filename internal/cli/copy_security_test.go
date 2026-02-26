@@ -128,3 +128,34 @@ func TestCopyFile_SymlinkDestination(t *testing.T) {
 		t.Errorf("copyFile followed symlink at destination and overwrote target file!")
 	}
 }
+
+func TestCopyFile_SymlinkSource(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	secretFile := filepath.Join(tmpDir, "secret")
+	err = os.WriteFile(secretFile, []byte("TOP SECRET"), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	srcFile := filepath.Join(tmpDir, "src_link")
+	err = os.Symlink(secretFile, srcFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dstFile := filepath.Join(tmpDir, "dst")
+
+	err = copyFile(srcFile, dstFile)
+	if err == nil {
+		t.Errorf("copyFile should have failed when source is a symlink")
+	}
+
+	if _, err := os.Stat(dstFile); !os.IsNotExist(err) {
+		t.Errorf("copyFile should not have created destination file when source is a symlink")
+	}
+}
