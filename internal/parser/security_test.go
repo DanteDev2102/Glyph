@@ -48,3 +48,35 @@ func TestWrite_Symlink(t *testing.T) {
 		t.Errorf("Target file was modified through symlink! Content: %s", string(content))
 	}
 }
+
+func TestValidateTemplateName(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{"valid-name", false},
+		{"ValidName_123", false},
+		{"", true},
+		{"config", true},
+		{"help", true},
+		{"init", true},
+		{"create", true},
+		{"rm", true},
+		{"set", true},
+		{"list", true},
+		{"glyph", true},
+		{"CONFIG", true},
+		{"invalid name", true},
+		{"invalid@name", true},
+		{"invalid/name", true},
+		{"this-name-is-way-too-long-for-the-validation-to-pass-successfully", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := ValidateTemplateName(tt.name); (err != nil) != tt.wantErr {
+				t.Errorf("ValidateTemplateName(%q) error = %v, wantErr %v", tt.name, err, tt.wantErr)
+			}
+		})
+	}
+}

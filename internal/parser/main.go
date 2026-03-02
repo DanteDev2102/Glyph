@@ -1,8 +1,11 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 )
 
 // Config holds global configuration for Glyph.
@@ -39,6 +42,33 @@ type IParser interface {
 	ExtractCommands()
 	Refresh()
 	DeleteSection()
+}
+
+// ValidateTemplateName checks if the provided name is a valid and safe template name.
+func ValidateTemplateName(name string) error {
+	if len(name) == 0 {
+		return errors.New("template name cannot be empty")
+	}
+
+	if len(name) > 50 {
+		return errors.New("template name is too long (max 50 characters)")
+	}
+
+	// Alphanumeric, hyphens, and underscores only
+	validName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	if !validName.MatchString(name) {
+		return errors.New("template name contains invalid characters (only alphanumeric, hyphens, and underscores allowed)")
+	}
+
+	// Reserved names check
+	reserved := []string{"config", "help", "init", "create", "rm", "set", "list", "glyph"}
+	for _, r := range reserved {
+		if strings.ToLower(name) == r {
+			return fmt.Errorf("'%s' is a reserved name and cannot be used as a template name", name)
+		}
+	}
+
+	return nil
 }
 
 // safeWrite checks if the target file is a symlink before writing data to it.
