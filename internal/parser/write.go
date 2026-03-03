@@ -22,6 +22,11 @@ type Template struct {
 }
 
 func (p *Parser) Write(tmpl *Template) {
+	if err := ValidateTemplateName(tmpl.Name); err != nil {
+		fmt.Printf("Validation error: %v\n", err)
+		return
+	}
+
 	var config map[string]interface{}
 	if err := toml.Unmarshal(p.Content, &config); err != nil || config == nil {
 		config = make(map[string]interface{})
@@ -88,6 +93,13 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 	if tmpl.Branch != "" && tmpl.Tag != "" {
 		fmt.Println("Only branch or tag flag")
 		return
+	}
+
+	if tmpl.Name != "" {
+		if err := ValidateTemplateName(tmpl.Name); err != nil {
+			fmt.Printf("Validation error: %v\n", err)
+			return
+		}
 	}
 
 	var newValues = make(map[string]string)
