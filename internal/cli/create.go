@@ -19,7 +19,14 @@ func (cli *Base) CreateCmd() {
 			if name == "" || (repo == "" && localPath == "") {
 				fmt.Println("name and (repo or local) flags required")
 				return
-			} else if branch != "" && tag != "" {
+			}
+
+			if err := parser.ValidateTemplateName(name); err != nil {
+				fmt.Printf("Invalid template name: %v\n", err)
+				return
+			}
+
+			if branch != "" && tag != "" {
 				fmt.Println("Use only branch or only tag for create new project template")
 				return
 			}
