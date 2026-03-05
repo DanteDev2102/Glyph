@@ -22,3 +22,8 @@
 **Vulnerability:** Configuration file created with world-readable permissions (0644).
 **Learning:** Default file creation permissions in many languages/environments are overly permissive for configuration files that may contain sensitive user information or preferences.
 **Prevention:** Explicitly set restricted permissions (e.g., 0600) when creating or writing to configuration files to ensure only the owner can access them.
+
+## 2026-05-15 - Template Name Validation
+**Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
+**Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
+**Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
