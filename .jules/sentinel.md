@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-06-20 - File Permission Preservation during Initialization
+**Vulnerability:** Loss of restrictive file permissions during project initialization. A template might contain files with restricted permissions (e.g., 0600 for private keys or secrets), but copying them without explicitly preserving modes could result in world-readable files (0644) in the target project.
+**Learning:** Standard file creation in Go (`os.Create`) defaults to 0666 (modified by umask), which often results in 0644. When bootstrapping projects from templates, it is critical to propagate the security intent of the original files by preserving their permissions.
+**Prevention:** Use `os.Lstat` to retrieve the source file's mode and `os.OpenFile` with `info.Mode().Perm()` to ensure the destination file has the same level of protection as the source.
