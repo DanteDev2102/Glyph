@@ -22,6 +22,11 @@ type Template struct {
 }
 
 func (p *Parser) Write(tmpl *Template) {
+	if err := ValidateTemplateName(tmpl.Name); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
 	var config map[string]interface{}
 	if err := toml.Unmarshal(p.Content, &config); err != nil || config == nil {
 		config = make(map[string]interface{})
@@ -71,6 +76,13 @@ func (p *Parser) Write(tmpl *Template) {
 
 // WriteSection updates or adds a section in the TOML configuration based on the provided template and section name.
 func (p *Parser) WriteSection(tmpl *Template, name string) {
+	if tmpl.Name != "" {
+		if err := ValidateTemplateName(tmpl.Name); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			return
+		}
+	}
+
 	var config map[string]map[string]string
 
 	err := toml.Unmarshal(p.Content, &config)
