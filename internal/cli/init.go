@@ -50,7 +50,7 @@ func copyDir(src string, dst string) error {
 		}
 		defer srcFile.Close()
 
-		dstFile, err := os.Create(target)
+		dstFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 		if err != nil {
 			return err
 		}
@@ -220,10 +220,12 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 
 func copyFile(src, dst string) error {
 	// Security check: Reject symbolic links at the source to prevent information disclosure
-	if info, err := os.Lstat(src); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("source %s is a symbolic link", src)
-		}
+	srcInfo, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+	if srcInfo.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("source %s is a symbolic link", src)
 	}
 
 	// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
@@ -239,7 +241,7 @@ func copyFile(src, dst string) error {
 	}
 	defer in.Close()
 
-	out, err := os.Create(dst)
+	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode().Perm())
 	if err != nil {
 		return err
 	}

@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-06-10 - Permission Loss during Template Copying
+**Vulnerability:** Loss of executable bits and restricted permissions when initializing projects from templates.
+**Learning:** Using `os.Create` or `os.WriteFile` with default permissions for scaffolding can strip necessary metadata (like executable bits for scripts) or inadvertently loosen restricted permissions.
+**Prevention:** Always use `os.Lstat` to retrieve source file permissions and use `os.OpenFile` with explicit mode bits to preserve the security posture of the original template files. On Unix, `os.WriteFile` preserves existing permissions when overwriting, so explicit preservation is only mandatory for new files.
