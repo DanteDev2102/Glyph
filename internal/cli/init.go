@@ -50,7 +50,7 @@ func copyDir(src string, dst string) error {
 		}
 		defer srcFile.Close()
 
-		dstFile, err := os.Create(target)
+		dstFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 		if err != nil {
 			return err
 		}
@@ -239,7 +239,13 @@ func copyFile(src, dst string) error {
 	}
 	defer in.Close()
 
-	out, err := os.Create(dst)
+	// Get source file info to preserve permissions
+	srcInfo, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
+	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode().Perm())
 	if err != nil {
 		return err
 	}
