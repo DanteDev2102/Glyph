@@ -50,14 +50,17 @@ func copyDir(src string, dst string) error {
 		}
 		defer srcFile.Close()
 
-		dstFile, err := os.Create(target)
+		dstFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 		if err != nil {
 			return err
 		}
 		defer dstFile.Close()
 
-		_, err = io.Copy(dstFile, srcFile)
-		return err
+		if _, err = io.Copy(dstFile, srcFile); err != nil {
+			return err
+		}
+
+		return os.Chmod(target, info.Mode().Perm())
 	})
 }
 
@@ -99,7 +102,10 @@ func replaceInFile(filePath string, replacements map[string]string) {
 		s = strings.ReplaceAll(s, "{{."+k+"}}", v)
 	}
 
-	os.WriteFile(filePath, []byte(s), 0644)
+	if err := os.WriteFile(filePath, []byte(s), info.Mode().Perm()); err != nil {
+		return
+	}
+	os.Chmod(filePath, info.Mode().Perm())
 }
 
 func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Command) {
@@ -220,15 +226,18 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 
 func copyFile(src, dst string) error {
 	// Security check: Reject symbolic links at the source to prevent information disclosure
-	if info, err := os.Lstat(src); err == nil {
+	info, err := os.Lstat(src)
+	if err == nil {
 		if info.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("source %s is a symbolic link", src)
 		}
+	} else {
+		return err
 	}
 
 	// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
-	if info, err := os.Lstat(dst); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 {
+	if dstInfo, err := os.Lstat(dst); err == nil {
+		if dstInfo.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("destination %s is a symbolic link", dst)
 		}
 	}
@@ -239,14 +248,17 @@ func copyFile(src, dst string) error {
 	}
 	defer in.Close()
 
-	out, err := os.Create(dst)
+	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, in)
-	return err
+	if _, err = io.Copy(out, in); err != nil {
+		return err
+	}
+
+	return os.Chmod(dst, info.Mode().Perm())
 }
 
 // InitCmd initializes the CLI with the "init" command.
