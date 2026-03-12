@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-03-12 - File Permission Preservation in Template Operations
+**Vulnerability:** Loss of original file permissions (e.g., executable bits, restricted read/write) during template copy operations.
+**Learning:** Standard file copy operations using `os.Create` and `io.Copy` do not automatically replicate source file permissions, which can lead to broken scripts or insecurely exposed files in the initialized project.
+**Prevention:** Explicitly retrieve the source file's mode using `os.Lstat` and apply it to the destination file using `os.Chmod` after the copy operation is complete.

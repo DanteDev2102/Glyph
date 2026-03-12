@@ -57,7 +57,11 @@ func copyDir(src string, dst string) error {
 		defer dstFile.Close()
 
 		_, err = io.Copy(dstFile, srcFile)
-		return err
+		if err != nil {
+			return err
+		}
+
+		return os.Chmod(target, info.Mode().Perm())
 	})
 }
 
@@ -220,8 +224,9 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 
 func copyFile(src, dst string) error {
 	// Security check: Reject symbolic links at the source to prevent information disclosure
-	if info, err := os.Lstat(src); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 {
+	srcInfo, err := os.Lstat(src)
+	if err == nil {
+		if srcInfo.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("source %s is a symbolic link", src)
 		}
 	}
@@ -246,7 +251,15 @@ func copyFile(src, dst string) error {
 	defer out.Close()
 
 	_, err = io.Copy(out, in)
-	return err
+	if err != nil {
+		return err
+	}
+
+	if srcInfo != nil {
+		return os.Chmod(dst, srcInfo.Mode().Perm())
+	}
+
+	return nil
 }
 
 // InitCmd initializes the CLI with the "init" command.
