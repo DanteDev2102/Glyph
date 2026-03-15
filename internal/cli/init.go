@@ -57,7 +57,12 @@ func copyDir(src string, dst string) error {
 		defer dstFile.Close()
 
 		_, err = io.Copy(dstFile, srcFile)
-		return err
+		if err != nil {
+			return err
+		}
+
+		// Security check: Preserve original file permissions
+		return os.Chmod(target, info.Mode().Perm())
 	})
 }
 
@@ -99,7 +104,8 @@ func replaceInFile(filePath string, replacements map[string]string) {
 		s = strings.ReplaceAll(s, "{{."+k+"}}", v)
 	}
 
-	os.WriteFile(filePath, []byte(s), 0644)
+	// Security check: Preserve original file permissions
+	os.WriteFile(filePath, []byte(s), info.Mode().Perm())
 }
 
 func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Command) {
@@ -220,15 +226,17 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 
 func copyFile(src, dst string) error {
 	// Security check: Reject symbolic links at the source to prevent information disclosure
-	if info, err := os.Lstat(src); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("source %s is a symbolic link", src)
-		}
+	info, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("source %s is a symbolic link", src)
 	}
 
 	// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
-	if info, err := os.Lstat(dst); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 {
+	if dstInfo, err := os.Lstat(dst); err == nil {
+		if dstInfo.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("destination %s is a symbolic link", dst)
 		}
 	}
@@ -246,7 +254,12 @@ func copyFile(src, dst string) error {
 	defer out.Close()
 
 	_, err = io.Copy(out, in)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Security check: Preserve original file permissions
+	return os.Chmod(dst, info.Mode().Perm())
 }
 
 // InitCmd initializes the CLI with the "init" command.
