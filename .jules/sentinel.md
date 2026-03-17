@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-06-20 - Permission Preservation and Configuration Directory Hardening
+**Vulnerability:** Overly permissive configuration directory (0755) and loss of file permissions (e.g., executable bit) during template initialization and replacement.
+**Learning:** `os.WriteFile` and `os.Create` do not modify existing file permissions, and directory creation defaults are often too permissive. Security-sensitive tools must explicitly manage permissions using `os.Chmod`.
+**Prevention:** Use `0700` for configuration directories. Always capture source permissions using `os.Stat` or `os.Lstat` and explicitly apply them to destination or modified files using `os.Chmod`.

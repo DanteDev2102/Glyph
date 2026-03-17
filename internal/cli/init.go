@@ -41,7 +41,7 @@ func copyDir(src string, dst string) error {
 		}
 
 		if info.IsDir() {
-			return os.MkdirAll(target, info.Mode())
+			return os.MkdirAll(target, info.Mode().Perm())
 		}
 
 		srcFile, err := os.Open(path)
@@ -57,7 +57,11 @@ func copyDir(src string, dst string) error {
 		defer dstFile.Close()
 
 		_, err = io.Copy(dstFile, srcFile)
-		return err
+		if err != nil {
+			return err
+		}
+
+		return os.Chmod(target, info.Mode().Perm())
 	})
 }
 
@@ -99,7 +103,7 @@ func replaceInFile(filePath string, replacements map[string]string) {
 		s = strings.ReplaceAll(s, "{{."+k+"}}", v)
 	}
 
-	os.WriteFile(filePath, []byte(s), 0644)
+	os.WriteFile(filePath, []byte(s), info.Mode().Perm())
 }
 
 func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Command) {
@@ -246,7 +250,16 @@ func copyFile(src, dst string) error {
 	defer out.Close()
 
 	_, err = io.Copy(out, in)
-	return err
+	if err != nil {
+		return err
+	}
+
+	info, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	return os.Chmod(dst, info.Mode().Perm())
 }
 
 // InitCmd initializes the CLI with the "init" command.
