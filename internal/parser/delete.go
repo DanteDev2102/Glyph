@@ -8,6 +8,11 @@ import (
 
 // DeleteSection removes a section from the configuration by its name.
 func (p *Parser) DeleteSection(name string) {
+	if name == "config" {
+		fmt.Println("Error: The 'config' section is reserved and cannot be deleted.")
+		return
+	}
+
 	var config map[string]interface{}
 
 	err := toml.Unmarshal(p.Content, &config)
