@@ -48,3 +48,42 @@ func TestWrite_Symlink(t *testing.T) {
 		t.Errorf("Target file was modified through symlink! Content: %s", string(content))
 	}
 }
+
+func TestDeleteSection_ConfigProtection(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-parser-delete-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	configPath := filepath.Join(tmpDir, "repositories.toml")
+	initialContent := `[config]
+author = "Sentinel"
+
+[my-template]
+repo = "https://github.com/test/repo"
+`
+	err = os.WriteFile(configPath, []byte(initialContent), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := &Parser{
+		File:    configPath,
+		Content: []byte(initialContent),
+	}
+
+	// Try to delete the 'config' section
+	p.DeleteSection("config")
+
+	// Read it back
+	config, err := p.Read()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verification: The 'config' section SHOULD NOT be deleted
+	if _, ok := config["config"]; !ok {
+		t.Errorf("Expected 'config' section to be preserved, but it was deleted!")
+	}
+}

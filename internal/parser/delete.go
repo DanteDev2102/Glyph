@@ -8,6 +8,13 @@ import (
 
 // DeleteSection removes a section from the configuration by its name.
 func (p *Parser) DeleteSection(name string) {
+	// Security check: 'config' is a reserved section for global settings.
+	// Protecting it from deletion ensures that critical configurations (like 'author') are preserved.
+	if name == "config" {
+		fmt.Println("Error: Cannot delete reserved 'config' section")
+		return
+	}
+
 	var config map[string]interface{}
 
 	err := toml.Unmarshal(p.Content, &config)
