@@ -88,3 +88,73 @@ func TestDstPathValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestCopyDir_PreservePermissions(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcDir := filepath.Join(tmpDir, "src")
+	err = os.Mkdir(srcDir, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	execFile := filepath.Join(srcDir, "exec.sh")
+	err = os.WriteFile(execFile, []byte("#!/bin/sh"), 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dstDir := filepath.Join(tmpDir, "dst")
+	err = copyDir(srcDir, dstDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	copiedFile := filepath.Join(dstDir, "exec.sh")
+	info, err := os.Stat(copiedFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info.Mode().Perm() != 0755 {
+		t.Errorf("Expected permissions 0755, got %o", info.Mode().Perm())
+	}
+}
+
+func TestReplaceInFile_PreservePermissions(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	execFile := filepath.Join(tmpDir, "exec.sh")
+	err = os.WriteFile(execFile, []byte("#!/bin/sh\necho {{.ProjectName}}"), 0700)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	replacements := map[string]string{"ProjectName": "TestApp"}
+	replaceInFile(execFile, replacements)
+
+	info, err := os.Stat(execFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info.Mode().Perm() != 0700 {
+		t.Errorf("Expected permissions 0700, got %o", info.Mode().Perm())
+	}
+
+	content, err := os.ReadFile(execFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(content), "TestApp") {
+		t.Errorf("Replacement failed, content: %s", string(content))
+	}
+}

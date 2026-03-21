@@ -50,7 +50,7 @@ func copyDir(src string, dst string) error {
 		}
 		defer srcFile.Close()
 
-		dstFile, err := os.Create(target)
+		dstFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ func replaceInFile(filePath string, replacements map[string]string) {
 		s = strings.ReplaceAll(s, "{{."+k+"}}", v)
 	}
 
-	os.WriteFile(filePath, []byte(s), 0644)
+	os.WriteFile(filePath, []byte(s), info.Mode().Perm())
 }
 
 func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Command) {
@@ -239,7 +239,12 @@ func copyFile(src, dst string) error {
 	}
 	defer in.Close()
 
-	out, err := os.Create(dst)
+	info, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+
+	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 	if err != nil {
 		return err
 	}
