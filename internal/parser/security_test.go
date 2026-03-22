@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/pelletier/go-toml/v2"
 )
 
 func TestWrite_Symlink(t *testing.T) {
@@ -46,5 +48,43 @@ func TestWrite_Symlink(t *testing.T) {
 
 	if string(content) != "SENSITIVE DATA" {
 		t.Errorf("Target file was modified through symlink! Content: %s", string(content))
+	}
+}
+
+func TestDeleteSection_ConfigProtection(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	configPath := filepath.Join(tmpDir, "repositories.toml")
+	initialContent := "[config]\nauthor = \"Sentinel\"\n"
+	err = os.WriteFile(configPath, []byte(initialContent), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := &Parser{
+		File:        configPath,
+		Content:     []byte(initialContent),
+		ContentRead: true,
+	}
+
+	p.DeleteSection("  CONFIG  ")
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var finalConfig map[string]interface{}
+	err = toml.Unmarshal(data, &finalConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, ok := finalConfig["config"]; !ok {
+		t.Error("The 'config' section was deleted!")
 	}
 }

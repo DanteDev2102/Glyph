@@ -2,12 +2,18 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
 
 // DeleteSection removes a section from the configuration by its name.
 func (p *Parser) DeleteSection(name string) {
+	if strings.ToLower(strings.TrimSpace(name)) == "config" {
+		fmt.Println("Error: the config section cannot be deleted")
+		return
+	}
+
 	var config map[string]interface{}
 
 	err := toml.Unmarshal(p.Content, &config)
