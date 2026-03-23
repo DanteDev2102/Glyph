@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-06-10 - Permission Regression in Project Initialization
+**Vulnerability:** File permissions (including executable bits) were lost during project initialization. `replaceInFile` hardcoded `0644`, and `copyFile`/`copyDir` used `os.Create` (defaulting to `0666` minus umask).
+**Learning:** Standard library functions like `os.Create` or `os.WriteFile` with hardcoded modes are unsuitable for tools that must mirror the state of a source repository or template.
+**Prevention:** Always use `os.Lstat` to capture the source file's `FileMode` and `os.OpenFile` with the captured mode to ensure consistent permission preservation across all file operations.
