@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -19,6 +20,11 @@ func (p *Parser) DeleteSection(name string) {
 	_, ok := config[name]
 	if !ok {
 		fmt.Println("Not Exist this command")
+		return
+	}
+
+	if strings.ToLower(name) == "config" {
+		fmt.Println("Error: [config] section is reserved and cannot be deleted.")
 		return
 	}
 

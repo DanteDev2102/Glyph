@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -94,6 +95,11 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 	_, ok := config[name]
 	if !ok {
 		fmt.Println("Not Exist this command")
+		return
+	}
+
+	if strings.ToLower(name) == "config" {
+		fmt.Println("Error: [config] section is reserved and cannot be modified.")
 		return
 	}
 

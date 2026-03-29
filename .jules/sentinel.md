@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2025-01-24 - Bypass of Reserved Section Protection in Update/Delete Commands
+**Vulnerability:** The `[config]` section could be deleted or modified via the `rm` and `set` commands because validation only checked the *new* name, not the *target* name.
+**Learning:** Security validation must be applied to all operations (Create, Update, Delete) that target protected resources by name, not just at the point of creation.
+**Prevention:** Explicitly check for reserved words in all functions that accept a section or key name as input, regardless of whether it's a new or existing entry.
