@@ -3,6 +3,7 @@ package parser
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -46,5 +47,78 @@ func TestWrite_Symlink(t *testing.T) {
 
 	if string(content) != "SENSITIVE DATA" {
 		t.Errorf("Target file was modified through symlink! Content: %s", string(content))
+	}
+}
+
+func TestDeleteSection_ConfigProtection(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-parser-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	configPath := filepath.Join(tmpDir, "repositories.toml")
+	initialContent := "[config]\nauthor = \"Sentinel\"\n\n[test]\nrepo = \"https://github.com/test/repo\"\n"
+	err = os.WriteFile(configPath, []byte(initialContent), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := &Parser{
+		File:    configPath,
+		Content: []byte(initialContent),
+	}
+
+	// Attempt to delete the [config] section
+	p.DeleteSection("config")
+
+	// Read the file back
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(string(content), "[config]") {
+		t.Errorf("[config] section was deleted!")
+	}
+}
+
+func TestWriteSection_ConfigProtection(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-parser-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	configPath := filepath.Join(tmpDir, "repositories.toml")
+	initialContent := "[config]\nauthor = \"Sentinel\"\n"
+	err = os.WriteFile(configPath, []byte(initialContent), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := &Parser{
+		File:    configPath,
+		Content: []byte(initialContent),
+	}
+
+	// Attempt to rename [config] to [malicious]
+	tmpl := &Template{
+		Name: "malicious",
+	}
+	p.WriteSection(tmpl, "config")
+
+	// Read the file back
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(string(content), "[config]") {
+		t.Errorf("[config] section was renamed or modified!")
+	}
+
+	if strings.Contains(string(content), "[malicious]") {
+		t.Errorf("[config] was allowed to be renamed to [malicious]!")
 	}
 }
