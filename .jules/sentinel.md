@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-03-31 - Permission Preservation and Configuration Hardening
+**Vulnerability:** Permission regression during project initialization and permissive configuration directory permissions. Deletion of reserved global configuration.
+**Learning:** Default file creation (0644/0755) can strip critical metadata like executable bits or expose configuration to other users. Reserved sections in multi-purpose config files must be protected from all destructive operations, not just creation.
+**Prevention:** Use `info.Mode().Perm()` with `os.OpenFile` to preserve original permissions. Enforce `0700` for user configuration directories. Add explicit guardrails for reserved section keys in deletion logic.

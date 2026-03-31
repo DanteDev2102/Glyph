@@ -16,6 +16,11 @@ func (p *Parser) DeleteSection(name string) {
 		return
 	}
 
+	if name == "config" {
+		fmt.Println("Error: The 'config' section is reserved and cannot be deleted.")
+		return
+	}
+
 	_, ok := config[name]
 	if !ok {
 		fmt.Println("Not Exist this command")
