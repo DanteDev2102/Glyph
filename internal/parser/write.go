@@ -64,7 +64,7 @@ func (p *Parser) Write(tmpl *Template) {
 	}
 
 	dir := filepath.Dir(p.File)
-	os.MkdirAll(dir, 0755)
+	os.MkdirAll(dir, 0700)
 
 	if err := p.safeWrite(data); err != nil {
 		fmt.Println(err)
@@ -76,6 +76,11 @@ func (p *Parser) Write(tmpl *Template) {
 
 // WriteSection updates or adds a section in the TOML configuration based on the provided template and section name.
 func (p *Parser) WriteSection(tmpl *Template, name string) {
+	if err := ValidateTemplateName(name); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
 	if tmpl.Name != "" {
 		if err := ValidateTemplateName(tmpl.Name); err != nil {
 			fmt.Printf("Error: %v\n", err)
@@ -153,7 +158,7 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 	}
 
 	dir := filepath.Dir(p.File)
-	os.MkdirAll(dir, 0755)
+	os.MkdirAll(dir, 0700)
 
 	err = p.safeWrite(data)
 	if err != nil {

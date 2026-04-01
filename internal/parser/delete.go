@@ -8,6 +8,11 @@ import (
 
 // DeleteSection removes a section from the configuration by its name.
 func (p *Parser) DeleteSection(name string) {
+	if err := ValidateTemplateName(name); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
 	var config map[string]interface{}
 
 	err := toml.Unmarshal(p.Content, &config)
