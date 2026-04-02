@@ -99,7 +99,7 @@ func replaceInFile(filePath string, replacements map[string]string) {
 		s = strings.ReplaceAll(s, "{{."+k+"}}", v)
 	}
 
-	os.WriteFile(filePath, []byte(s), 0644)
+	os.WriteFile(filePath, []byte(s), info.Mode().Perm())
 }
 
 func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Command) {

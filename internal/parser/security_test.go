@@ -48,3 +48,36 @@ func TestWrite_Symlink(t *testing.T) {
 		t.Errorf("Target file was modified through symlink! Content: %s", string(content))
 	}
 }
+
+func TestSafeWrite_EnforcePermissions(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "glyph-parser-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	configPath := filepath.Join(tmpDir, "repositories.toml")
+	// Pre-create file with overly permissive permissions
+	err = os.WriteFile(configPath, []byte("old data"), 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := &Parser{
+		File: configPath,
+	}
+
+	err = p.safeWrite([]byte("new data"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	info, err := os.Stat(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info.Mode().Perm() != 0600 {
+		t.Errorf("Permissions not enforced! Expected 0600, got %o", info.Mode().Perm())
+	}
+}
