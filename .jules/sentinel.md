@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-06-18 - Permission Preservation and Configuration Hardening
+**Vulnerability:** Project initialization failed to preserve source file permissions (e.g., executable bits), and the configuration directory was created with overly permissive 0755 permissions.
+**Learning:** Defaulting to standard permissions (0666/0755) during file creation can break template functionality and expose configuration data. Hardening must happen at both the file and directory levels.
+**Prevention:** Use `os.OpenFile` with the source file's mode to preserve permissions during copying. Always use restricted modes (e.g., 0700 for directories, 0600 for files) for sensitive configuration data.

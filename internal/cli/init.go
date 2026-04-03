@@ -34,8 +34,8 @@ func copyDir(src string, dst string) error {
 		target := filepath.Join(dst, rel)
 
 		// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
-		if info, err := os.Lstat(target); err == nil {
-			if info.Mode()&os.ModeSymlink != 0 {
+		if dstInfo, err := os.Lstat(target); err == nil {
+			if dstInfo.Mode()&os.ModeSymlink != 0 {
 				return fmt.Errorf("destination %s is a symbolic link", target)
 			}
 		}
@@ -50,7 +50,7 @@ func copyDir(src string, dst string) error {
 		}
 		defer srcFile.Close()
 
-		dstFile, err := os.Create(target)
+		dstFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 		if err != nil {
 			return err
 		}
@@ -82,6 +82,7 @@ func replaceInFile(filePath string, replacements map[string]string) {
 	// Security check: Don't follow symlinks to prevent path traversal
 	info, err := os.Lstat(filePath)
 	if err != nil {
+		fmt.Printf("Error: Unable to access %s: %v\n", filePath, err)
 		return
 	}
 	if info.Mode()&os.ModeSymlink != 0 {
@@ -99,7 +100,7 @@ func replaceInFile(filePath string, replacements map[string]string) {
 		s = strings.ReplaceAll(s, "{{."+k+"}}", v)
 	}
 
-	os.WriteFile(filePath, []byte(s), 0644)
+	os.WriteFile(filePath, []byte(s), info.Mode().Perm())
 }
 
 func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Command) {
@@ -220,15 +221,17 @@ func chargeTemplates(cli *Base, initCmd *cobra.Command, commands *[]parser.Comma
 
 func copyFile(src, dst string) error {
 	// Security check: Reject symbolic links at the source to prevent information disclosure
-	if info, err := os.Lstat(src); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("source %s is a symbolic link", src)
-		}
+	srcInfo, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+	if srcInfo.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("source %s is a symbolic link", src)
 	}
 
 	// Security check: Reject symbolic links at the destination to prevent arbitrary file overwrites
-	if info, err := os.Lstat(dst); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 {
+	if dstInfo, err := os.Lstat(dst); err == nil {
+		if dstInfo.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("destination %s is a symbolic link", dst)
 		}
 	}
@@ -239,7 +242,7 @@ func copyFile(src, dst string) error {
 	}
 	defer in.Close()
 
-	out, err := os.Create(dst)
+	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode().Perm())
 	if err != nil {
 		return err
 	}

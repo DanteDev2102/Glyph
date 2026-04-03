@@ -64,7 +64,7 @@ func (p *Parser) Write(tmpl *Template) {
 	}
 
 	dir := filepath.Dir(p.File)
-	os.MkdirAll(dir, 0755)
+	os.MkdirAll(dir, 0700)
 
 	if err := p.safeWrite(data); err != nil {
 		fmt.Println(err)
@@ -153,7 +153,7 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 	}
 
 	dir := filepath.Dir(p.File)
-	os.MkdirAll(dir, 0755)
+	os.MkdirAll(dir, 0700)
 
 	err = p.safeWrite(data)
 	if err != nil {
