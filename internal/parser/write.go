@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -88,6 +89,11 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 	err := toml.Unmarshal(p.Content, &config)
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+
+	if strings.EqualFold(name, "config") {
+		fmt.Println("Cannot modify reserved 'config' section")
 		return
 	}
 

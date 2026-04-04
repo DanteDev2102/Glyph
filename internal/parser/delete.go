@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -13,6 +14,11 @@ func (p *Parser) DeleteSection(name string) {
 	err := toml.Unmarshal(p.Content, &config)
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+
+	if strings.EqualFold(name, "config") {
+		fmt.Println("Cannot delete reserved 'config' section")
 		return
 	}
 
