@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -76,6 +77,11 @@ func (p *Parser) Write(tmpl *Template) {
 
 // WriteSection updates or adds a section in the TOML configuration based on the provided template and section name.
 func (p *Parser) WriteSection(tmpl *Template, name string) {
+	if strings.EqualFold(name, "config") || strings.EqualFold(tmpl.Name, "config") {
+		fmt.Println("Error: the [config] section cannot be overwritten or used as a template name")
+		return
+	}
+
 	if tmpl.Name != "" {
 		if err := ValidateTemplateName(tmpl.Name); err != nil {
 			fmt.Printf("Error: %v\n", err)
