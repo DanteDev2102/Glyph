@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-06-18 - Strict Configuration Permission Enforcement
+**Vulnerability:** Configuration file permissions could be broader than intended if the file already existed. `os.WriteFile` with `0600` does not change permissions of an existing file.
+**Learning:** In Go, `os.WriteFile` (and similar calls using `O_TRUNC`) only applies the mode bits during file creation. It does not downgrade permissions of an existing file, which can lead to sensitive configuration remaining world-readable.
+**Prevention:** Always follow a write operation with an explicit `os.Chmod` when strictly restricted permissions (e.g., 0600) are required for information protection.

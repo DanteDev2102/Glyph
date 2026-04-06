@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -64,7 +65,8 @@ func (p *Parser) Write(tmpl *Template) {
 	}
 
 	dir := filepath.Dir(p.File)
-	os.MkdirAll(dir, 0755)
+	// Security check: Use restricted permissions for the config directory
+	os.MkdirAll(dir, 0700)
 
 	if err := p.safeWrite(data); err != nil {
 		fmt.Println(err)
@@ -76,6 +78,12 @@ func (p *Parser) Write(tmpl *Template) {
 
 // WriteSection updates or adds a section in the TOML configuration based on the provided template and section name.
 func (p *Parser) WriteSection(tmpl *Template, name string) {
+	// Security check: Don't allow modifying the reserved [config] section
+	if strings.EqualFold(name, "config") {
+		fmt.Println("Error: Cannot modify the reserved 'config' section")
+		return
+	}
+
 	if tmpl.Name != "" {
 		if err := ValidateTemplateName(tmpl.Name); err != nil {
 			fmt.Printf("Error: %v\n", err)
@@ -153,7 +161,8 @@ func (p *Parser) WriteSection(tmpl *Template, name string) {
 	}
 
 	dir := filepath.Dir(p.File)
-	os.MkdirAll(dir, 0755)
+	// Security check: Use restricted permissions for the config directory
+	os.MkdirAll(dir, 0700)
 
 	err = p.safeWrite(data)
 	if err != nil {
