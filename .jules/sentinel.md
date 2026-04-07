@@ -27,3 +27,8 @@
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
 **Learning:** User-provided keys in a configuration file that also dictate CLI subcommands must be strictly validated against a whitelist of characters and a blacklist of reserved words.
 **Prevention:** Enforce strict naming conventions (alphanumeric, hyphens, underscores) and reject reserved keywords used by the application's configuration or CLI framework.
+
+## 2026-04-07 - Enforcement of Restrictive Configuration Permissions
+**Vulnerability:** Configuration files and directories could maintain overly permissive permissions (e.g., 0644) if they pre-existed, as os.WriteFile and os.MkdirAll do not override modes on existing paths.
+**Learning:** Hardening existing files requires an explicit os.Chmod call. However, when hardening parent directories using filepath.Dir, safety checks are mandatory to prevent unintended permission changes to the current working directory (.) or root (/).
+**Prevention:** Use os.Chmod(path, 0600) for files and os.Chmod(dir, 0700) for directories, with explicit exclusions for "." and "/" when deriving parent paths.
