@@ -49,5 +49,11 @@ func (p *Parser) safeWrite(data []byte) error {
 		}
 	}
 
-	return os.WriteFile(p.File, data, 0600)
+	err := os.WriteFile(p.File, data, 0600)
+	if err != nil {
+		return err
+	}
+
+	// Explicitly set permissions to 0600 in case the file already existed with broader permissions.
+	return os.Chmod(p.File, 0600)
 }

@@ -20,8 +20,8 @@
 
 ## 2026-04-12 - Secure Configuration File Permissions
 **Vulnerability:** Configuration file created with world-readable permissions (0644).
-**Learning:** Default file creation permissions in many languages/environments are overly permissive for configuration files that may contain sensitive user information or preferences.
-**Prevention:** Explicitly set restricted permissions (e.g., 0600) when creating or writing to configuration files to ensure only the owner can access them.
+**Learning:** Default file creation permissions in many languages/environments are overly permissive for configuration files. In Go, `os.WriteFile` with restricted permissions (0600) will NOT change the permissions of an existing file that has broader permissions (e.g., 0644).
+**Prevention:** Always use an explicit `os.Chmod(path, 0600)` after writing to ensure restricted permissions are enforced regardless of the file's previous state. Use `0700` for the containing directory.
 
 ## 2026-05-15 - Template Name Validation
 **Vulnerability:** Lack of validation for template names could lead to configuration corruption (e.g., overwriting the `[config]` section) or CLI command shadowing.
