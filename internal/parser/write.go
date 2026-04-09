@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -76,6 +77,11 @@ func (p *Parser) Write(tmpl *Template) {
 
 // WriteSection updates or adds a section in the TOML configuration based on the provided template and section name.
 func (p *Parser) WriteSection(tmpl *Template, name string) {
+	if strings.EqualFold(name, "config") {
+		fmt.Println("Error: [config] section cannot be modified via this command as it is reserved for global settings")
+		return
+	}
+
 	if tmpl.Name != "" {
 		if err := ValidateTemplateName(tmpl.Name); err != nil {
 			fmt.Printf("Error: %v\n", err)
